@@ -1,1 +1,7 @@
+/*
+ * wcdeal4 — Home page. Defines window.__WCGO: the SCROLL-SCRUBBED deal
+ * engine for the Workplace Consultancy gallery (front card deals off the
+ * top, deck shifts forward; motion is 1:1 with scroll, freezes when you stop).
+ * Pair: 08-wcsetup5 (setup) + 09-wcdeal4 (this).
+ */
 window.__WCGO=function(){var W=window.__WC,st=W.st,tk=W.tk,C=W.C,N=W.N,P=W.P,S=W.S;st.style.overflow='hidden';C.forEach(function(c){c.style.transition='none'});function R(){var r=tk.getBoundingClientRect(),ih=innerHeight;st.style.maxWidth=Math.min(750,ih*.96)+'px';var sw=st.clientWidth,pk=sw*P,sh=(N-1)*pk+sw*.625;st.style.height=sh+'px';var p=((ih-sh)-r.top)/(tk.offsetHeight-sh);p=p<0?0:p>1?1:p;var f=p*(N-1),k=f|0,t=f-k;C.forEach(function(c,i){var d=(i-k+N)%N,w,tp,op,z;if(d==0){w=sw;tp=(N-1)*pk+(sh-(N-1)*pk)*t;op=1-t/.6;if(op<0)op=0;z=200}else{var e=d-1,w0=sw*(1-S*d),w1=sw*(1-S*e),a=(N-1-d)*pk,b=(N-1-e)*pk;w=w0+(w1-w0)*t;tp=a+(b-a)*t;op=(d==N-1&&k>0)?(t/.3>1?1:t/.3):1;z=100-d}c.style.width=w+'px';c.style.height=w*.625+'px';c.style.top=tp+'px';c.style.opacity=op;c.style.zIndex=z})}R();onscroll=R;onresize=R};
