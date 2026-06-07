@@ -173,3 +173,66 @@ window.__PHI=function(){
  * (.pf-ill-design), and any already-sticky row. Home-gated. Runs last.
  */
 (function(){if(location.pathname.length>1)return;[...document.querySelectorAll('.pf-svc-row')].forEach(function(row){if(getComputedStyle(row).position==='sticky'||row.querySelector('.pf-himg-5')||row.querySelector('.pf-ill-spec')||row.querySelector('.pf-ill-design'))return;var media=row.querySelector('.pf-media'),ffe=row.querySelector('.pf-ill-ffe'),mv=media&&!ffe;var track=document.createElement('div');track.style.height='160vh';row.parentNode.insertBefore(track,row);track.appendChild(row);row.style.cssText+=';position:sticky;top:0;min-height:100vh;align-items:center';if(mv){media.style.cssText+=';display:flex;align-items:center;justify-content:center';var il=media.firstElementChild;if(il)il.style.maxWidth='68vh';}function upd(){var r=track.getBoundingClientRect(),rng=track.offsetHeight-innerHeight,p=rng>0?-r.top/rng:0;p=p<0?0:p>1?1:p;if(mv){var q=p/.35;q=q>1?1:q;media.style.opacity=.3+.7*q;media.style.transform='translateY('+(24-24*q)+'px)';}}upd();addEventListener('scroll',upd,{passive:1});addEventListener('resize',upd);});})();
+
+/* ===== 14-leasinggallery.js ===== */
+/*
+ * leasinggallery — Home page. Turns the Furniture Leasing image strip
+ * (.pf-img-row) into a PINNED horizontal scroll-through gallery:
+ *   - duplicates the 4 tiles -> 8 (the 4 repeated),
+ *   - wraps the row in a sticky pin inside a tall track,
+ *   - on scroll the strip translates LEFT (you progress through the tiles
+ *     left -> right), scrubbed 1:1 with scroll, frozen when you stop.
+ * The gallery keeps its original height (each tile stays square); at rest
+ * (scroll start) it looks identical to the original 4-up. Desktop shows 4
+ * tiles at once, mobile/tablet shows 2. Home-gated.
+ */
+(function () {
+  if (location.pathname.length > 1) return;
+  var row = document.querySelector('.pf-img-row');
+  if (!row || row.dataset.lz) return;
+  row.dataset.lz = '1';
+  var GAP = 24;
+
+  // 4 -> 8 (duplicate the existing tiles, preserving their bg-image classes)
+  [].slice.call(row.children).forEach(function (t) { row.appendChild(t.cloneNode(true)); });
+
+  // track (tall, drives the scroll) > pin (sticky, clips) > row (the strip)
+  var track = document.createElement('div');
+  track.style.cssText = 'position:relative';
+  row.parentNode.insertBefore(track, row);
+  var pin = document.createElement('div');
+  pin.style.cssText = 'position:sticky;overflow:hidden;width:100%';
+  track.appendChild(pin);
+  pin.appendChild(row);
+  row.style.cssText = 'display:flex;flex-wrap:nowrap;gap:' + GAP + 'px;will-change:transform';
+
+  var S = {};
+  function layout() {
+    var vis = innerWidth >= 992 ? 4 : 2;          // tiles visible at once
+    var pinW = pin.clientWidth;
+    var tileW = (pinW - (vis - 1) * GAP) / vis;   // so `vis` tiles fill the pin
+    [].slice.call(row.children).forEach(function (t) {
+      t.style.flex = '0 0 ' + tileW + 'px';
+      t.style.width = tileW + 'px';
+      t.style.aspectRatio = '1 / 1';
+      t.style.height = 'auto';
+    });
+    S.H = tileW;
+    pin.style.height = tileW + 'px';
+    pin.style.top = Math.max(0, (innerHeight - tileW) / 2) + 'px';  // vertically centred
+    S.travel = row.scrollWidth - pinW;            // horizontal distance to scrub
+    track.style.height = (tileW + S.travel) + 'px';
+  }
+  function render() {
+    var rect = track.getBoundingClientRect();
+    var range = track.offsetHeight - S.H;
+    var p = range > 0 ? ((innerHeight - S.H) / 2 - rect.top) / range : 0;
+    p = p < 0 ? 0 : p > 1 ? 1 : p;
+    row.style.transform = 'translateX(' + (-p * S.travel) + 'px)';
+  }
+  layout();
+  render();
+  addEventListener('scroll', render, { passive: true });
+  addEventListener('resize', function () { layout(); render(); });
+})();
+
