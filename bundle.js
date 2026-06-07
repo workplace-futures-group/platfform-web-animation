@@ -176,57 +176,68 @@ window.__PHI=function(){
 
 /* ===== 14-leasinggallery.js ===== */
 /*
- * leasinggallery — Home page. Turns the Furniture Leasing image strip
- * (.pf-img-row) into a PINNED horizontal scroll-through gallery:
- *   - duplicates the 4 tiles -> 8 (the 4 repeated),
- *   - wraps the row in a sticky pin inside a tall track,
- *   - on scroll the strip translates LEFT (you progress through the tiles
- *     left -> right), scrubbed 1:1 with scroll, frozen when you stop.
- * The gallery keeps its original height (each tile stays square); at rest
- * (scroll start) it looks identical to the original 4-up. Desktop shows 4
- * tiles at once, mobile/tablet shows 2. Home-gated.
+ * leasinggallery — Home page. Furniture Leasing scrollytelling.
+ * Pins the WHOLE block (image gallery + heading/body) vertically CENTRED in
+ * the viewport, and scrubs the gallery strip horizontally (slides LEFT) as you
+ * scroll, so you progress through the tiles left -> right. The 4 tiles are
+ * duplicated to 8. The text is on-screen for the whole pin (it's part of the
+ * pinned block). Everything is measured at runtime so it's fully responsive:
+ *   - tile size = (gallery width - gaps) / visible-count (4 desktop, 2 mobile),
+ *   - gallery<->text gap = the ORIGINAL rendered gap (kept identical),
+ *   - block centred => equal space above the gallery and below the text.
+ * Home-gated; scroll-scrubbed (frozen when you stop).
  */
 (function () {
   if (location.pathname.length > 1) return;
   var row = document.querySelector('.pf-img-row');
   if (!row || row.dataset.lz) return;
   row.dataset.lz = '1';
-  var GAP = 24;
 
-  // 4 -> 8 (duplicate the existing tiles, preserving their bg-image classes)
+  var text = row.nextElementSibling;            // .pf-split (heading + body)
+  var parent = row.parentNode;                  // .pf-container
+  var GAP = parseFloat(getComputedStyle(row).columnGap) || 24;
+  // original vertical gap gallery -> text (measured before we move anything)
+  var G = text ? Math.max(0, text.getBoundingClientRect().top - row.getBoundingClientRect().bottom) : 48;
+
+  // 4 -> 8 (duplicate the tiles, keeping their bg-image classes)
   [].slice.call(row.children).forEach(function (t) { row.appendChild(t.cloneNode(true)); });
 
-  // track (tall, drives the scroll) > pin (sticky, clips) > row (the strip)
+  // track (tall, drives scroll) > pin (sticky, centred) > [clip > strip], text
   var track = document.createElement('div');
   track.style.cssText = 'position:relative';
-  row.parentNode.insertBefore(track, row);
+  parent.insertBefore(track, row);
   var pin = document.createElement('div');
-  pin.style.cssText = 'position:sticky;overflow:hidden;width:100%';
+  pin.style.cssText = 'position:sticky;display:flex;flex-direction:column';
   track.appendChild(pin);
-  pin.appendChild(row);
-  row.style.cssText = 'display:flex;flex-wrap:nowrap;gap:' + GAP + 'px;will-change:transform';
+  var clip = document.createElement('div');
+  clip.style.cssText = 'overflow:hidden;width:100%';
+  pin.appendChild(clip);
+  clip.appendChild(row);
+  if (text) { pin.appendChild(text); text.style.marginTop = '0'; }
+  row.style.cssText = 'display:flex;flex-wrap:nowrap;gap:' + GAP + 'px;margin:0;will-change:transform';
 
   var S = {};
   function layout() {
-    var vis = innerWidth >= 992 ? 4 : 2;          // tiles visible at once
+    var vis = innerWidth >= 992 ? 4 : 2;
     var pinW = pin.clientWidth;
-    var tileW = (pinW - (vis - 1) * GAP) / vis;   // so `vis` tiles fill the pin
+    var tileW = (pinW - (vis - 1) * GAP) / vis;   // `vis` tiles fill the gallery
     [].slice.call(row.children).forEach(function (t) {
       t.style.flex = '0 0 ' + tileW + 'px';
       t.style.width = tileW + 'px';
       t.style.aspectRatio = '1 / 1';
       t.style.height = 'auto';
     });
-    S.H = tileW;
-    pin.style.height = tileW + 'px';
-    pin.style.top = Math.max(0, (innerHeight - tileW) / 2) + 'px';  // vertically centred
+    clip.style.height = tileW + 'px';
+    pin.style.rowGap = G + 'px';
+    S.blockH = tileW + G + (text ? text.offsetHeight : 0);
     S.travel = row.scrollWidth - pinW;            // horizontal distance to scrub
-    track.style.height = (tileW + S.travel) + 'px';
+    pin.style.top = ((innerHeight - S.blockH) / 2) + 'px';   // vertically centred
+    track.style.height = (S.blockH + S.travel) + 'px';
   }
   function render() {
     var rect = track.getBoundingClientRect();
-    var range = track.offsetHeight - S.H;
-    var p = range > 0 ? ((innerHeight - S.H) / 2 - rect.top) / range : 0;
+    var range = track.offsetHeight - S.blockH;    // == travel
+    var p = range > 0 ? (((innerHeight - S.blockH) / 2) - rect.top) / range : 0;
     p = p < 0 ? 0 : p > 1 ? 1 : p;
     row.style.transform = 'translateX(' + (-p * S.travel) + 'px)';
   }
