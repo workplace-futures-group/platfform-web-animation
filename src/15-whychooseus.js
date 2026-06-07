@@ -47,6 +47,7 @@
   var track=document.createElement('div'); track.style.cssText='position:relative';
   cont.parentNode.insertBefore(track,cont);
   var pin=document.createElement('div'); pin.style.cssText='position:sticky;top:0;height:100vh;display:flex;align-items:center';
+  pin.style.alignItems='center'; pin.style.alignItems='safe center';   // centre if it fits, top-align (no clip) if taller than the viewport
   track.appendChild(pin); pin.appendChild(cont);
   cont.style.cssText+=';width:100%';
 
@@ -54,14 +55,17 @@
     MAXH=0; subs.forEach(function(s){var hh=s.scrollHeight; if(hh>MAXH)MAXH=hh;});
   }
   function layout(){
+    var padTop=parseFloat(getComputedStyle(items[0]).paddingTop)||0;
     if(innerWidth<=991){                   // stack on mobile/tablet
       split.style.flexDirection='column'; split.style.alignItems='flex-end';
       titleCol.style.flex='none'; titleCol.style.width='100%'; titleCol.style.maxWidth='100%';
       bodyCol.style.flex='none'; bodyCol.style.width='100%'; bodyCol.style.maxWidth='100%';
+      h.style.marginTop='0';
     }else{
       split.style.flexDirection='row'; split.style.alignItems='flex-start';
       titleCol.style.flex='0 0 34%'; titleCol.style.width='34%'; titleCol.style.maxWidth='34%';
       bodyCol.style.flex='0 0 54%'; bodyCol.style.width='54%'; bodyCol.style.maxWidth='54%';
+      h.style.marginTop=padTop+'px';       // align heading top with the first item's TEXT top
     }
     measure();
     track.style.height='calc(100vh + '+(N*STEP)+'vh)';
