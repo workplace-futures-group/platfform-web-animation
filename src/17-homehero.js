@@ -28,10 +28,17 @@
   // traveling logo: white base + black overlay (black clipped to the nav bar band)
   var W = document.createElement('div');
   W.id = 'hh-logo';
-  W.style.cssText = 'position:fixed;z-index:1001;pointer-events:none;will-change:left,top,width';
+  W.style.cssText = 'position:fixed;z-index:1001;cursor:pointer;will-change:left,top,width';
+  // click the logo -> smooth-scroll to the first section after the hero
+  W.addEventListener('click', function () {
+    var t = nav.nextElementSibling || hero.nextElementSibling;
+    if (!t) return;
+    var navH = nav.getBoundingClientRect().height;
+    scrollTo({ top: scrollY + t.getBoundingClientRect().top - navH, behavior: 'smooth' });
+  });
   var white = src.cloneNode(true);
   white.removeAttribute('class');
-  white.style.cssText = 'position:absolute;left:0;top:0;width:100%;height:auto;display:block;color:#fff;fill:#fff;filter:drop-shadow(0 1px 14px rgba(0,0,0,.35))';
+  white.style.cssText = 'position:absolute;left:0;top:0;width:100%;height:auto;display:block;color:#fff;fill:#fff';
   var black = src.cloneNode(true);
   black.removeAttribute('class');
   black.style.cssText = 'position:absolute;left:0;top:0;width:100%;height:auto;display:block;color:#1A1A1A;fill:#1A1A1A';
@@ -54,6 +61,7 @@
     var x = lerp(vw - bigW - 48, DOCK.x, p);
     var y = lerp(vh - bigH - 48, DOCK.y, p);
     W.style.width = w + 'px'; W.style.left = x + 'px'; W.style.top = y + 'px';
+    white.style.filter = 'drop-shadow(0 1px 14px rgba(0,0,0,' + (0.35 * (1 - p)) + '))';  // shadow on the white hero logo, gone by the time it docks black
     // two-tone: show the black layer only where the logo overlaps the nav bar band
     var nr = nav.getBoundingClientRect();
     var topIn = Math.min(Math.max(nr.top - y, 0), h);
