@@ -14,7 +14,7 @@
   ill.innerHTML=t;
   var sv=ill.querySelector('svg');sv.style.cssText='display:block;height:min(67vh,50vw);max-width:100%;width:auto';
   var p=sv.querySelector('path');p.style.fill='none';p.style.stroke='#1A1A1A';p.style.strokeWidth='1.3';p.setAttribute('vector-effect','non-scaling-stroke');
-  var L=p.getTotalLength();p.style.strokeDashoffset=0;
+  var L=p.getTotalLength();p.style.strokeDasharray=L;   // single dash = one continuous draw front (no wrap/2nd point)
   var DRAW=0.80;            // draw finishes at 80% of sticky; last 20% = pause
   var S={n:1,g0:-0.4};
   function measure(){
@@ -31,7 +31,7 @@
     var g=S.n>0?-tk.getBoundingClientRect().top/S.n:0;
     var d=(g-S.g0)/(DRAW-S.g0);
     d=d<0?0:d>1?1:d;
-    p.style.strokeDasharray=(d*L)+' '+((1-d)*L);
+    p.style.strokeDashoffset=(1-d)*L;   // L (hidden) -> 0 (drawn), one front from the start
   }
   measure();R();
   addEventListener('scroll',R,{passive:1});

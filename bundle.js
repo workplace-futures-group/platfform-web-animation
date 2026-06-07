@@ -152,7 +152,7 @@ window.__WCGO=function(){var W=window.__WC,st=W.st,tk=W.tk,C=W.C,N=W.N,P=W.P,S=W
   ill.innerHTML=t;
   var sv=ill.querySelector('svg');sv.style.cssText='display:block;height:min(67vh,50vw);max-width:100%;width:auto';
   var p=sv.querySelector('path');p.style.fill='none';p.style.stroke='#1A1A1A';p.style.strokeWidth='1.3';p.setAttribute('vector-effect','non-scaling-stroke');
-  var L=p.getTotalLength();p.style.strokeDashoffset=0;
+  var L=p.getTotalLength();p.style.strokeDasharray=L;   // single dash = one continuous draw front (no wrap/2nd point)
   var DRAW=0.80;            // draw finishes at 80% of sticky; last 20% = pause
   var S={n:1,g0:-0.4};
   function measure(){
@@ -169,7 +169,7 @@ window.__WCGO=function(){var W=window.__WC,st=W.st,tk=W.tk,C=W.C,N=W.N,P=W.P,S=W
     var g=S.n>0?-tk.getBoundingClientRect().top/S.n:0;
     var d=(g-S.g0)/(DRAW-S.g0);
     d=d<0?0:d>1?1:d;
-    p.style.strokeDasharray=(d*L)+' '+((1-d)*L);
+    p.style.strokeDashoffset=(1-d)*L;   // L (hidden) -> 0 (drawn), one front from the start
   }
   measure();R();
   addEventListener('scroll',R,{passive:1});
@@ -179,68 +179,81 @@ window.__WCGO=function(){var W=window.__WC,st=W.st,tk=W.tk,C=W.C,N=W.N,P=W.P,S=W
 
 /* ===== 11-physdropengine4.js ===== */
 /*
- * physdropengine4 — Home page. Defines window.__PHI: the Matter.js physics
- * world for the combined Design + FF&E section.
+ * physdropengine4 — Home. window.__PHI: the Design + FF&E physics scene.
  *
- * Choreography (driven by scroll progress p, 0..1 over the track):
- *   - p 0.0       : only the text is visible (read it).
- *   - p 0.1 -> 0.3: the Design chair fades in, held in place (top-left).
- *   - p 0.4 -> 0.55: the text scrolls up and away (fades out).
- *   - p > 0.5     : gravity is applied to the chair -> it drops, meets the
- *                   pre-settled FF&E pile and (being heavier) shifts them.
+ * Choreography (scroll progress p, 0..1 over the 300vh track):
+ *   p 0    -> 0.12 : TEXT + CHAIR fade in TOGETHER (chair big, ~2x), held.
+ *   p 0.12 -> 0.32 : hold (read it).
+ *   p 0.32 -> 0.48 : text scrolls up & away; chair shrinks slightly (2x -> ~1.3x).
+ *   p 0.50         : the FF&E PHYSICS objects drop in (only now, after the text).
+ *   p 0.55 -> 1.0  : the chair descends into the pile, rotating 0 -> ~270deg,
+ *                    all scroll-linked (kinematic), meeting the settled objects.
  *
- * All objects (FF&E + chair) use non-scaling-stroke at a uniform 1.3px so the
- * line weight is identical regardless of each object's size.
- * Pair: 11-physdropengine4 (engine) + 12-physdroploader4 (loader/DOM).
+ * FF&E are real Matter bodies (drop + settle, chaotic central pile, capped size
+ * so big displays stay chaotic). Draggable on fine-pointer (desktop) devices
+ * only, so touch/page scroll is never blocked. The chair is scroll-controlled
+ * (so its 270deg tumble is exactly scroll-linked). Uniform 1.3px stroke.
+ * Pair: 11 (engine) + 12 (loader/DOM).
  */
-window.__PHI=function(){
-  var M=window.Matter,PH=window.__PH,scene=PH.scene,tk=PH.tk,O=PH.O,svgs=PH.svgs;
-  var B=M.Bodies,C=M.Composite,R=Math.random,WW=scene.clientWidth,HH=scene.clientHeight;
-  var en=M.Engine.create();en.gravity.y=.9;
-  var wd=en.world,o={isStatic:true};
-  // floor + side walls (floor top edge sits exactly at the scene bottom = HH)
-  C.add(wd,[B.rectangle(WW/2,HH+30,WW+600,60,o),B.rectangle(-30,HH/2,60,HH*4,o),B.rectangle(WW+30,HH/2,60,HH*4,o)]);
-  var SC=WW/6;                       // every object's larger dimension = SC
-  var STROKE='1.3px';
-  function paint(sv){               // uniform, scale-independent line weight
-    sv.querySelectorAll('path').forEach(function(p){
-      p.setAttribute('vector-effect','non-scaling-stroke');
-      p.style.strokeWidth=STROKE;
-    });
-  }
-  var EL=[];
-  // 8 FF&E pieces — settle on load, spread across the full width
-  svgs.forEach(function(svg,i){
-    var d=O[i],m=Math.max(d[1],d[2]),k=SC/m,w=d[1]*k,h=d[2]*k;
-    var wr=document.createElement('div');
-    wr.style.cssText='position:absolute;left:0;top:0;width:'+w+'px;height:'+h+'px';
-    wr.innerHTML=svg;
-    var sv=wr.querySelector('svg');sv.style.cssText='width:100%;height:100%;display:block';paint(sv);
+window.__PHI = function () {
+  var M = window.Matter, PH = window.__PH, scene = PH.scene, tk = PH.tk, O = PH.O, svgs = PH.svgs;
+  var B = M.Bodies, C = M.Composite, R = Math.random;
+  var WW = scene.clientWidth, HH = scene.clientHeight;
+  var en = M.Engine.create(); en.gravity.y = 0.9;
+  var wd = en.world, st = { isStatic: true };
+  C.add(wd, [B.rectangle(WW / 2, HH + 30, WW + 600, 60, st), B.rectangle(-30, HH / 2, 60, HH * 4, st), B.rectangle(WW + 30, HH / 2, 60, HH * 4, st)]);
+  var SC = Math.min(WW / 6, 150);     // cap object size -> stays chaotic on big displays
+  var STROKE = '1.3px';
+  function paint(sv) { sv.querySelectorAll('path').forEach(function (p) { p.setAttribute('vector-effect', 'non-scaling-stroke'); p.style.strokeWidth = STROKE; }); }
+
+  // FF&E: build wrappers (hidden) + bodies (added to the world only later)
+  var EL = [], bodies = [], added = false;
+  svgs.forEach(function (svg, i) {
+    var d = O[i], m = Math.max(d[1], d[2]), k = SC / m, w = d[1] * k, h = d[2] * k;
+    var wr = document.createElement('div');
+    wr.style.cssText = 'position:absolute;left:0;top:0;width:' + w + 'px;height:' + h + 'px;opacity:0;pointer-events:none';
+    wr.innerHTML = svg; var sv = wr.querySelector('svg'); sv.style.cssText = 'width:100%;height:100%;display:block'; paint(sv);
     scene.appendChild(wr);
-    var b=B.rectangle(SC*.5+R()*(WW-SC),-40-R()*500,w*.8,h*.8,{restitution:.4,friction:.3,angle:R()-.5});
-    EL.push([wr,w,h,b]);C.add(wd,b);
+    var x = WW * 0.5 + (R() - 0.5) * Math.min(WW * 0.6, 680);   // central band -> chaotic pile
+    var b = B.rectangle(x, -60 - R() * 520, w * 0.8, h * 0.8, { restitution: 0.4, friction: 0.3, angle: R() - 0.5 });
+    EL.push([wr, w, h, b]); bodies.push(b);
   });
-  // the Design chair — held as a plain div (fades in), then becomes a body
-  var dk=SC/660,cw=575*dk,ch=660*dk,hx=WW*.27,hy=HH*.27;
-  var dw=document.createElement('div');
-  dw.style.cssText='position:absolute;left:0;top:0;width:'+cw+'px;height:'+ch+'px;opacity:0;transform:translate('+(hx-cw/2)+'px,'+(hy-ch/2)+'px)';
-  dw.innerHTML=PH.dsvg;
-  var ds=dw.querySelector('svg');ds.style.cssText='width:100%;height:100%;display:block';
-  ds.querySelectorAll('path').forEach(function(p){p.style.fill='none';p.style.stroke='#1A1A1A';p.setAttribute('vector-effect','non-scaling-stroke');p.style.strokeWidth=STROKE;});
+
+  // Chair = scroll-controlled (kinematic) so the tumble is exactly scroll-linked. Base = 2x.
+  var dk = SC * 2 / 660, cw = 575 * dk, ch = 660 * dk;
+  var dw = document.createElement('div');
+  dw.style.cssText = 'position:absolute;left:0;top:0;width:' + cw + 'px;height:' + ch + 'px;opacity:0;transform-origin:50% 50%;pointer-events:none;z-index:40';
+  dw.innerHTML = PH.dsvg; var ds = dw.querySelector('svg'); ds.style.cssText = 'width:100%;height:100%;display:block';
+  ds.querySelectorAll('path').forEach(function (p) { p.style.fill = 'none'; p.style.stroke = '#1A1A1A'; p.setAttribute('vector-effect', 'non-scaling-stroke'); p.style.strokeWidth = STROKE; });
   scene.appendChild(dw);
-  var chair=null;
-  function syn(wr,w,h,b){wr.style.transform='translate('+(b.position.x-w/2)+'px,'+(b.position.y-h/2)+'px) rotate('+b.angle+'rad)'}
-  (function L(){M.Engine.update(en,16.7);EL.forEach(function(a){syn(a[0],a[1],a[2],a[3])});if(chair)syn(dw,cw,ch,chair);requestAnimationFrame(L)})();
-  function ss(){
-    var r=tk.getBoundingClientRect(),n=tk.offsetHeight-innerHeight,p=n>0?-r.top/n:0;p=p<0?0:p>1?1:p;
-    // chair fade-in (held) until it becomes a body
-    if(!chair)dw.style.opacity=Math.max(0,Math.min(1,(p-.1)/.2));
-    // text scrolls up and away
-    var T=PH.txt;if(T){var q=(p-.4)/.15;q=q<0?0:q>1?1:q;T.style.opacity=1-q;T.style.transform='translateY(-50%) translateY('+(-q*innerHeight*.7)+'px)';}
-    // gravity applied -> chair drops into the pile (heavier, so it shifts them)
-    if(p>.5&&!chair){dw.style.opacity=1;chair=B.rectangle(hx,hy,cw*.8,ch*.8,{restitution:.4,friction:.3,density:.003});C.add(wd,chair);}
+
+  // drag objects (desktop / fine-pointer only -> never blocks touch or page scroll)
+  if (matchMedia('(pointer:fine)').matches) {
+    scene.style.pointerEvents = 'auto';
+    var mouse = M.Mouse.create(scene), mc = M.MouseConstraint.create(en, { mouse: mouse, constraint: { stiffness: 0.2, render: { visible: false } } });
+    C.add(wd, mc);
+    if (mouse.mousewheel) { scene.removeEventListener('mousewheel', mouse.mousewheel); scene.removeEventListener('DOMMouseScroll', mouse.mousewheel); }
   }
-  ss();addEventListener('scroll',ss,{passive:1});
+
+  function syn(wr, w, h, b) { wr.style.transform = 'translate(' + (b.position.x - w / 2) + 'px,' + (b.position.y - h / 2) + 'px) rotate(' + b.angle + 'rad)'; }
+  (function L() { M.Engine.update(en, 16.7); if (added) EL.forEach(function (a) { syn(a[0], a[1], a[2], a[3]); }); requestAnimationFrame(L); })();
+  function cl(v) { return v < 0 ? 0 : v > 1 ? 1 : v; }
+
+  function ss() {
+    var r = tk.getBoundingClientRect(), n = tk.offsetHeight - innerHeight, p = n > 0 ? -r.top / n : 0; p = cl(p);
+    var appear = cl(p / 0.12);
+    var T = PH.txt; if (T) { var q = cl((p - 0.32) / 0.16); T.style.opacity = appear * (1 - q); T.style.transform = 'translateY(-50%) translateY(' + (-q * innerHeight * 0.7) + 'px)'; }
+    var sc = 2 - 0.7 * cl((p - 0.32) / 0.2);            // chair scale 2x held -> ~1.3x
+    var hx = WW * 0.30, hy = HH * 0.46;                 // held position
+    var px = WW * 0.5, py = HH * 0.74;                  // pile target
+    var desc = cl((p - 0.55) / 0.45);
+    var cx = hx + (px - hx) * desc, cy = hy + (py - hy) * desc;
+    var rot = desc * 4.712;                             // 0 -> 270deg scroll-linked
+    dw.style.opacity = appear;
+    dw.style.transform = 'translate(' + (cx - cw / 2) + 'px,' + (cy - ch / 2) + 'px) rotate(' + rot + 'rad) scale(' + (sc / 2) + ')';
+    if (p > 0.5 && !added) { added = true; C.add(wd, bodies); EL.forEach(function (a) { a[0].style.opacity = 1; }); }
+  }
+  ss(); addEventListener('scroll', ss, { passive: 1 });
 };
 
 
@@ -254,7 +267,7 @@ window.__PHI=function(){
  * Matter.js, then polls for window.__PHI. Home-gated.
  * Pair: 11-physdropengine4 (engine) + 12 (this).
  */
-(function(){if(location.pathname.length>1)return;var foot=document.querySelector('.pf-foot');if(!foot)return;var ill=document.querySelector('.pf-ill-design');if(!ill)return;var drow=ill.closest('.pf-svc-row');var P='https://cdn.prod.website-files.com/6a18656c49b2496b48cfeaba/',O=[['6a23db05ba7cf91521376eb1_ffe2-chair.svg',268,308],['6a23db0512027d60988801e0_ffe2-tablelamp2.svg',65,116],['6a23db05b51623a67323a40e_ffe2-pendant.svg',106,143],['6a23db05359c0b160f92aa3a_ffe2-chair2.svg',136,181],['6a23db05359c0b160f92aa4c_ffe2-taskchair.svg',123,186],['6a23db06b51623a67323a478_ffe2-table.svg',176,152],['6a23db06359c0b160f92aa64_ffe2-tablelamp.svg',163,178],['6a23db06b51623a67323a4a0_ffe2-stool.svg',126,171]],D='6a2343ca44b4d0523d9a2b39_illus-design.svg';var tk=document.createElement('div');tk.style.cssText='height:300vh;position:relative;background:#fff';var ffe=document.querySelector('.pf-ill-ffe'),ffeSec=ffe?ffe.closest('.pf-section'):null;if(ffeSec&&ffeSec.parentNode){ffeSec.parentNode.insertBefore(tk,ffeSec.nextElementSibling);}else{foot.parentNode.insertBefore(tk,foot);}var pin=document.createElement('div');pin.style.cssText='position:sticky;top:var(--nav-h);height:calc(100vh - var(--nav-h));overflow:hidden';tk.appendChild(pin);var scene=document.createElement('div');scene.style.cssText='position:absolute;inset:0';pin.appendChild(scene);var txt=document.createElement('div');txt.style.cssText='position:absolute;top:50%;transform:translateY(-50%);z-index:60;font-family:Gotham,sans-serif';function dpos(){var e='clamp(24px,3.5vw,64px)';if(innerWidth<=991){txt.style.left=e;txt.style.right=e;txt.style.width='auto'}else{txt.style.left='auto';txt.style.right=e;txt.style.width='calc(.44*(100% - 2*'+e+'))'}}dpos();addEventListener('resize',dpos);var h2=drow.querySelector('.pf-h2'),bd=drow.querySelector('.pf-body');if(h2)txt.appendChild(h2);if(bd)txt.appendChild(bd);scene.appendChild(txt);var dsec=drow.closest('.pf-section');if(dsec){dsec.remove();}else{drow.remove();}window.__PH={tk:tk,scene:scene,O:O,txt:txt};Promise.all(O.map(function(d){return fetch(P+d[0]).then(function(r){return r.text()})}).concat(fetch(P+D).then(function(r){return r.text()}))).then(function(a){window.__PH.dsvg=a.pop();window.__PH.svgs=a;var s=document.createElement('script');s.src='https://cdn.prod.website-files.com/6a18656c49b2496b48cfeaba/6a257de3bc0ee8683d0365a7_matter-0-19-0.min.js';s.onload=function(){var t=setInterval(function(){if(window.__PHI){clearInterval(t);__PHI()}},30)};document.head.appendChild(s)})})();
+(function(){if(location.pathname.length>1)return;var foot=document.querySelector('.pf-foot');if(!foot)return;var ill=document.querySelector('.pf-ill-design');if(!ill)return;var drow=ill.closest('.pf-svc-row');var P='https://cdn.prod.website-files.com/6a18656c49b2496b48cfeaba/',O=[['6a23db05ba7cf91521376eb1_ffe2-chair.svg',268,308],['6a23db0512027d60988801e0_ffe2-tablelamp2.svg',65,116],['6a23db05b51623a67323a40e_ffe2-pendant.svg',106,143],['6a23db05359c0b160f92aa3a_ffe2-chair2.svg',136,181],['6a23db05359c0b160f92aa4c_ffe2-taskchair.svg',123,186],['6a23db06b51623a67323a478_ffe2-table.svg',176,152],['6a23db06359c0b160f92aa64_ffe2-tablelamp.svg',163,178],['6a23db06b51623a67323a4a0_ffe2-stool.svg',126,171]],D='6a2343ca44b4d0523d9a2b39_illus-design.svg';var tk=document.createElement('div');tk.style.cssText='height:300vh;position:relative;background:#fff';var ffe=document.querySelector('.pf-ill-ffe'),ffeSec=ffe?ffe.closest('.pf-section'):null;if(ffeSec&&ffeSec.parentNode){ffeSec.parentNode.insertBefore(tk,ffeSec.nextElementSibling);}else{foot.parentNode.insertBefore(tk,foot);}var pin=document.createElement('div');pin.style.cssText='position:sticky;top:var(--nav-h);height:calc(100dvh - var(--nav-h));overflow:hidden';tk.appendChild(pin);var scene=document.createElement('div');scene.style.cssText='position:absolute;inset:0';pin.appendChild(scene);var txt=document.createElement('div');txt.style.cssText='position:absolute;top:50%;transform:translateY(-50%);z-index:60;font-family:Gotham,sans-serif';function dpos(){var e='clamp(24px,3.5vw,64px)';if(innerWidth<=991){txt.style.left=e;txt.style.right=e;txt.style.width='auto'}else{txt.style.left='auto';txt.style.right=e;txt.style.width='calc(.44*(100% - 2*'+e+'))'}}dpos();addEventListener('resize',dpos);var h2=drow.querySelector('.pf-h2'),bd=drow.querySelector('.pf-body');if(h2)txt.appendChild(h2);if(bd)txt.appendChild(bd);scene.appendChild(txt);var dsec=drow.closest('.pf-section');if(dsec){dsec.remove();}else{drow.remove();}window.__PH={tk:tk,scene:scene,O:O,txt:txt};Promise.all(O.map(function(d){return fetch(P+d[0]).then(function(r){return r.text()})}).concat(fetch(P+D).then(function(r){return r.text()}))).then(function(a){window.__PH.dsvg=a.pop();window.__PH.svgs=a;var s=document.createElement('script');s.src='https://cdn.prod.website-files.com/6a18656c49b2496b48cfeaba/6a257de3bc0ee8683d0365a7_matter-0-19-0.min.js';s.onload=function(){var t=setInterval(function(){if(window.__PHI){clearInterval(t);__PHI()}},30)};document.head.appendChild(s)})})();
 
 /* ===== 13-svcpin7.js ===== */
 /*
@@ -411,16 +424,16 @@ window.__PHI=function(){
 
 /* ===== 17-homehero.js ===== */
 /*
- * homehero — HOME page, ALL breakpoints. Nav starts as a strip below the
- * full-screen hero and sticks to the top on scroll; one PLATFFORM logo starts
- * big & white bottom-right and scrubs up-left, scaling down + flipping
- * white->black (two-tone clip at the bar edge) into the nav's logo slot.
+ * homehero — HOME page, ALL breakpoints. Nav starts below the full-screen hero
+ * and sticks to the top on scroll; one PLATFFORM logo starts big & white
+ * bottom-right and scrubs up-left, scaling down into the nav's logo slot.
  *
- * PERF: animates via GPU `transform` (translate+scale, never left/top/width),
- * throttled to one update per animation frame; the drop-shadow is static and
- * the white layer just fades its opacity out as it docks (cheap) instead of
- * recomputing a filter every scroll event. Big size + dock target are derived
- * per-breakpoint so it reads LARGE->small everywhere.
+ * TWO-TONE via Z-ORDER (not clip on the white): the WHITE logo sits BEHIND the
+ * nav bar (z 999) so the opaque bar hides it + its drop-shadow over the nav
+ * (shadow stays full & unclipped over the hero); the BLACK logo sits ABOVE the
+ * nav (z 1001), clipped to the nav band. Result: white keeps an un-boxed
+ * shadow over the hero, and the black/docked logo never has a shadow.
+ * GPU transform, rAF-throttled. Big size + dock derived per breakpoint.
  */
 (function () {
   if (location.pathname.length > 1) return;
@@ -445,19 +458,22 @@ window.__PHI=function(){
     function st(ts) { if (t0 === null) t0 = ts; var pp = Math.min(1, (ts - t0) / dur); scrollTo(0, sY + d * easeInOut(pp)); if (pp < 1) requestAnimationFrame(st); }
     requestAnimationFrame(st);
   }
-
-  var W = document.createElement('div'); W.id = 'hh-logo';
-  W.style.cssText = 'position:fixed;left:0;top:0;z-index:1001;cursor:pointer;transform-origin:0 0;will-change:transform';
-  W.addEventListener('click', function () {
+  function mk(z, color, shadow, clickable) {
+    var w = document.createElement('div');
+    w.style.cssText = 'position:fixed;left:0;top:0;z-index:' + z + ';transform-origin:0 0;will-change:transform;' + (clickable ? 'cursor:pointer' : 'pointer-events:none');
+    var s = src.cloneNode(true); s.removeAttribute('class');
+    s.style.cssText = 'position:absolute;left:0;top:0;width:100%;height:auto;display:block;color:' + color + ';fill:' + color + (shadow ? ';filter:drop-shadow(0 1px 14px rgba(0,0,0,.35))' : '');
+    w.appendChild(s); document.body.appendChild(w);
+    return w;
+  }
+  var Wwhite = mk(999, '#fff', true, true);   // behind the nav bar; shadow intact over hero
+  Wwhite.id = 'hh-logo';
+  var Wblack = mk(1001, '#1A1A1A', false, false);  // above the nav; clipped to the nav band; no shadow
+  Wwhite.addEventListener('click', function () {
     var t = nav.nextElementSibling || hero.nextElementSibling; if (!t) return;
     var nh = nav.getBoundingClientRect().height;
     glideTo(scrollY + t.getBoundingClientRect().top - nh, 600);
   });
-  var white = src.cloneNode(true); white.removeAttribute('class');
-  white.style.cssText = 'position:absolute;left:0;top:0;width:100%;height:auto;display:block;color:#fff;fill:#fff;filter:drop-shadow(0 1px 14px rgba(0,0,0,.35))';
-  var black = src.cloneNode(true); black.removeAttribute('class');
-  black.style.cssText = 'position:absolute;left:0;top:0;width:100%;height:auto;display:block;color:#1A1A1A;fill:#1A1A1A';
-  W.appendChild(white); W.appendChild(black); document.body.appendChild(W);
 
   var ASPECT = 1610.4 / 177.6, S = {};
   function lerp(a, b, t) { return a + (b - a) * t; }
@@ -471,18 +487,19 @@ window.__PHI=function(){
     var padX = mob ? 24 : 40, padTop = mob ? 24 : 26;
     S.dockX = Math.max(padX, (vw - 1720) / 2 + padX); S.dockY = padTop; S.dockW = (mob ? 16 : 22) * ASPECT;
     S.heroH = hero.getBoundingClientRect().height || vh;
-    W.style.width = S.bigW + 'px';
+    Wwhite.style.width = S.bigW + 'px'; Wblack.style.width = S.bigW + 'px';
   }
   function R() {
     var p = scrollY / S.heroH; p = p < 0 ? 0 : p > 1 ? 1 : p;
     var w = lerp(S.bigW, S.dockW, p), scale = w / S.bigW;
     var tx = lerp(S.x0, S.dockX, p), ty = lerp(S.y0, S.dockY, p);
-    W.style.transform = 'translate(' + tx + 'px,' + ty + 'px) scale(' + scale + ')';
-    var nr = nav.getBoundingClientRect();   // two-tone clip in the logo's local (pre-scale) coords
+    var tf = 'translate(' + tx + 'px,' + ty + 'px) scale(' + scale + ')';
+    Wwhite.style.transform = tf; Wblack.style.transform = tf;
+    // black shows only within the nav band (local pre-scale coords)
+    var nr = nav.getBoundingClientRect();
     var topL = Math.min(Math.max((nr.top - ty) / scale, 0), S.bigH);
     var botL = Math.min(Math.max(S.bigH - (nr.bottom - ty) / scale, 0), S.bigH);
-    black.style.clipPath = 'inset(' + topL + 'px 0px ' + botL + 'px 0px)';
-    white.style.clipPath = 'inset(0px 0px ' + (S.bigH - topL) + 'px 0px)';  // white ONLY above the nav band -> drop-shadow never on the black/docked logo
+    Wblack.style.clipPath = 'inset(' + topL + 'px 0px ' + botL + 'px 0px)';
     if (!S.mob && links) links.style.opacity = p < 0.5 ? 0 : (p - 0.5) / 0.5;
   }
   var ticking = false;
