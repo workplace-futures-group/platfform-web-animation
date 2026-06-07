@@ -21,6 +21,7 @@
   nav.style.setProperty('position', 'sticky', 'important');
   nav.style.setProperty('top', '0', 'important');
   nav.style.setProperty('z-index', '1000', 'important');
+  nav.style.fontFamily = 'Gotham, sans-serif';   // moving the nav out to body-level drops the inherited Gotham -> set it back
   var navLogo = nav.querySelector('.pf-logo');
   if (navLogo) navLogo.style.visibility = 'hidden';       // the traveling logo replaces it
   var links = nav.querySelector('.pf-nav-links');
