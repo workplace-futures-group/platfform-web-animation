@@ -25,6 +25,19 @@
   // 4 -> 8 (duplicate the tiles, keeping their bg-image classes)
   [].slice.call(row.children).forEach(function (t) { row.appendChild(t.cloneNode(true)); });
 
+  // MOBILE: native touch-swipe carousel (no pin) — 2 visible, snap-scroll the 8.
+  // Revert to the pinned scrub on phones via window.PF_MOBILE_FULL = true.
+  if (window.PF_MOBILE && window.PF_MOBILE()) {
+    row.style.cssText = 'display:flex;flex-wrap:nowrap;gap:' + GAP + 'px;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;margin:0';
+    [].slice.call(row.children).forEach(function (t) {
+      t.style.flex = '0 0 calc((100% - ' + GAP + 'px) / 2)';
+      t.style.width = 'calc((100% - ' + GAP + 'px) / 2)';
+      t.style.aspectRatio = '1 / 1'; t.style.height = 'auto';
+      t.style.scrollSnapAlign = 'start';
+    });
+    return;
+  }
+
   // track (tall, drives scroll) > pin (sticky, centred) > [clip > strip], text
   var track = document.createElement('div');
   track.style.cssText = 'position:relative';

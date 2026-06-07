@@ -3,6 +3,20 @@
    Each module is an IIFE that self-gates (by pathname and/or element presence).
    Concatenated from src/ in footer order. Do not edit bundle.js by hand — edit src/ and rebuild. */
 
+/* ===== 00-config.js ===== */
+/*
+ * config — global runtime flags shared across bundle modules (loads first).
+ *
+ * PF_MOBILE_FULL — REVERT SWITCH. Set to `true` to keep the FULL desktop
+ * scrollytelling on phones too (i.e. undo the mobile simplifications in one
+ * place, so you don't lose the joy). Default `false` = lighter, touch-friendly
+ * mobile variants for the pinned sections (currently: leasing gallery +
+ * "Why Choose Us"). Desktop/tablet are never affected either way.
+ */
+window.PF_MOBILE_FULL = false;
+window.PF_MOBILE = function () { return innerWidth <= 767 && !window.PF_MOBILE_FULL; };
+
+
 /* ===== 01-mobilenav.js ===== */
 /*
  * mobilenav — Mobile burger navigation. ALL pages.
@@ -235,6 +249,19 @@ window.__PHI=function(){
   // 4 -> 8 (duplicate the tiles, keeping their bg-image classes)
   [].slice.call(row.children).forEach(function (t) { row.appendChild(t.cloneNode(true)); });
 
+  // MOBILE: native touch-swipe carousel (no pin) — 2 visible, snap-scroll the 8.
+  // Revert to the pinned scrub on phones via window.PF_MOBILE_FULL = true.
+  if (window.PF_MOBILE && window.PF_MOBILE()) {
+    row.style.cssText = 'display:flex;flex-wrap:nowrap;gap:' + GAP + 'px;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;margin:0';
+    [].slice.call(row.children).forEach(function (t) {
+      t.style.flex = '0 0 calc((100% - ' + GAP + 'px) / 2)';
+      t.style.width = 'calc((100% - ' + GAP + 'px) / 2)';
+      t.style.aspectRatio = '1 / 1'; t.style.height = 'auto';
+      t.style.scrollSnapAlign = 'start';
+    });
+    return;
+  }
+
   // track (tall, drives scroll) > pin (sticky, centred) > [clip > strip], text
   var track = document.createElement('div');
   track.style.cssText = 'position:relative';
@@ -283,97 +310,110 @@ window.__PHI=function(){
 
 /* ===== 15-whychooseus.js ===== */
 /*
- * whychooseus — About page. "WHY CHOOSE US" pinned scrollytelling accordion.
- * Layout: heading sticky on the LEFT, the 5 reason items on the RIGHT. The
- * section PINS and, as you scroll, each item expands its paragraph ONE AT A
- * TIME (the previous collapses) — pure scroll, all start collapsed.
- * Paragraphs use the existing .pf-list-sub style. Item 1 keeps its native
- * (editable) paragraph; items 2-5 get placeholder copy (swap COPY[] later, or
- * promote to native Webflow elements). About-gated.
+ * whychooseus — About page. "WHY CHOOSE US" scrollytelling accordion.
+ * DESKTOP/TABLET: heading sticky LEFT, items RIGHT; the section PINS and each
+ * item expands ONE AT A TIME on scroll (two-tone). MOBILE (<=767): no pin, no
+ * two-column — a simple TAP-to-expand accordion (revert to the pinned version
+ * on phones via window.PF_MOBILE_FULL = true). Item 1 keeps its native
+ * paragraph; items 2-5 use placeholder COPY (swap later). About-gated.
  */
-(function(){
-  if(!/^\/about(\/|$)/.test(location.pathname))return;
-  var hs=[].slice.call(document.querySelectorAll('h2.pf-h2'));
-  var h=hs.filter(function(e){return /why choose/i.test(e.textContent)})[0];
-  if(!h)return;
-  var split=h.closest('.pf-split');
-  if(!split||split.dataset.wc)return; split.dataset.wc='1';
-  var cont=split.closest('.pf-container');
-  var titleCol=h.closest('.pf-split-title');
-  var bodyCol=split.querySelector('.pf-split-body');
-  var items=[].slice.call(bodyCol.querySelectorAll('.pf-list-item'));
-  if(!items.length)return;
-  // item 1 keeps its own paragraph (null); placeholders for the rest
-  var COPY=[null,
+(function () {
+  if (!/^\/about(\/|$)/.test(location.pathname)) return;
+  var hs = [].slice.call(document.querySelectorAll('h2.pf-h2'));
+  var h = hs.filter(function (e) { return /why choose/i.test(e.textContent); })[0];
+  if (!h) return;
+  var split = h.closest('.pf-split');
+  if (!split || split.dataset.wc) return; split.dataset.wc = '1';
+  var cont = split.closest('.pf-container');
+  var titleCol = h.closest('.pf-split-title');
+  var bodyCol = split.querySelector('.pf-split-body');
+  var items = [].slice.call(bodyCol.querySelectorAll('.pf-list-item'));
+  if (!items.length) return;
+  var COPY = [null,
     'Seamless management from first brief to final installation.',
     'Aesthetic insight that turns specification into atmosphere.',
     'Clear, prompt answers at every stage of the project.',
     'Rigorous checks that protect your investment and your timeline.'];
-  var subs=items.map(function(it,i){
-    var s=it.querySelector('.pf-list-sub');
-    if(!s){s=document.createElement('p');s.className='pf-list-sub';s.textContent=COPY[i]||'';it.appendChild(s);}
+  var subs = items.map(function (it, i) {
+    var s = it.querySelector('.pf-list-sub');
+    if (!s) { s = document.createElement('p'); s.className = 'pf-list-sub'; s.textContent = COPY[i] || ''; it.appendChild(s); }
     return s;
   });
-
-  // --- two-column layout, scoped to this instance (overrides the global rail) ---
-  split.style.cssText+=';display:flex;flex-direction:row;flex-wrap:nowrap;align-items:flex-start;justify-content:space-between;gap:0;width:100%';
-  titleCol.style.cssText+=';flex:0 0 34%;width:34%;max-width:34%;text-align:left;align-items:flex-start';
-  bodyCol.style.cssText+=';flex:0 0 54%;width:54%;max-width:54%';
-
-  // --- collapse every paragraph + prep the expand/collapse transition ---
-  subs.forEach(function(s){
-    s.style.cssText+=';overflow:hidden;height:0;opacity:0;margin-top:0;transition:height .45s ease,opacity .4s ease,margin-top .45s ease;will-change:height';
+  // collapse every paragraph + prep the expand/collapse transition (shared)
+  subs.forEach(function (s) {
+    s.style.cssText += ';overflow:hidden;height:0;opacity:0;margin-top:0;transition:height .4s ease,opacity .35s ease,margin-top .4s ease;will-change:height';
   });
 
-  // --- pin: wrap the container in a tall track with a 100vh sticky pin ---
-  var STEP=40;                 // vh of scroll budget per item
-  var N=items.length, MAXH=0, cur=-2;
-  var track=document.createElement('div'); track.style.cssText='position:relative';
-  cont.parentNode.insertBefore(track,cont);
-  var pin=document.createElement('div'); pin.style.cssText='position:sticky;top:0;height:100vh;display:flex;align-items:center';
-  pin.style.alignItems='center'; pin.style.alignItems='safe center';   // centre if it fits, top-align (no clip) if taller than the viewport
-  track.appendChild(pin); pin.appendChild(cont);
-  cont.style.cssText+=';width:100%';
-
-  function measure(){                      // uniform open height => no layout jiggle
-    MAXH=0; subs.forEach(function(s){var hh=s.scrollHeight; if(hh>MAXH)MAXH=hh;});
+  // ---- MOBILE: tap-to-expand accordion (no pin, native stacked layout) ----
+  if (window.PF_MOBILE && window.PF_MOBILE()) {
+    var cur = -1;
+    function setOpen(i) {
+      subs.forEach(function (s, j) {
+        var on = j === i;
+        s.style.height = on ? s.scrollHeight + 'px' : '0';
+        s.style.opacity = on ? '1' : '0';
+        s.style.marginTop = on ? '10px' : '0';
+      });
+    }
+    items.forEach(function (it, i) {
+      var t = it.querySelector('.pf-list-title') || it;
+      t.style.cursor = 'pointer';
+      it.addEventListener('click', function () { cur = (cur === i) ? -1 : i; setOpen(cur); });
+    });
+    return;
   }
-  function layout(){
-    var padTop=parseFloat(getComputedStyle(items[0]).paddingTop)||0;
-    if(innerWidth<=991){                   // stack on mobile/tablet
-      split.style.flexDirection='column'; split.style.alignItems='flex-end';
-      titleCol.style.flex='none'; titleCol.style.width='100%'; titleCol.style.maxWidth='100%';
-      bodyCol.style.flex='none'; bodyCol.style.width='100%'; bodyCol.style.maxWidth='100%';
-      h.style.marginTop='0';
-    }else{
-      split.style.flexDirection='row'; split.style.alignItems='flex-start';
-      titleCol.style.flex='0 0 34%'; titleCol.style.width='34%'; titleCol.style.maxWidth='34%';
-      bodyCol.style.flex='0 0 54%'; bodyCol.style.width='54%'; bodyCol.style.maxWidth='54%';
-      h.style.marginTop=padTop+'px';       // align heading top with the first item's TEXT top
+
+  // ---- DESKTOP/TABLET: two-column + pinned one-at-a-time scrub ----
+  split.style.cssText += ';display:flex;flex-direction:row;flex-wrap:nowrap;align-items:flex-start;justify-content:space-between;gap:0;width:100%';
+  titleCol.style.cssText += ';flex:0 0 34%;width:34%;max-width:34%;text-align:left;align-items:flex-start';
+  bodyCol.style.cssText += ';flex:0 0 54%;width:54%;max-width:54%';
+
+  var STEP = 40;
+  var N = items.length, MAXH = 0, curD = -2;
+  var track = document.createElement('div'); track.style.cssText = 'position:relative';
+  cont.parentNode.insertBefore(track, cont);
+  var pin = document.createElement('div'); pin.style.cssText = 'position:sticky;top:0;height:100vh;display:flex';
+  pin.style.alignItems = 'center'; pin.style.alignItems = 'safe center';
+  track.appendChild(pin); pin.appendChild(cont);
+  cont.style.cssText += ';width:100%';
+
+  function measure() { MAXH = 0; subs.forEach(function (s) { var hh = s.scrollHeight; if (hh > MAXH) MAXH = hh; }); }
+  function layout() {
+    var padTop = parseFloat(getComputedStyle(items[0]).paddingTop) || 0;
+    if (innerWidth <= 991) {
+      split.style.flexDirection = 'column'; split.style.alignItems = 'flex-end';
+      titleCol.style.flex = 'none'; titleCol.style.width = '100%'; titleCol.style.maxWidth = '100%';
+      bodyCol.style.flex = 'none'; bodyCol.style.width = '100%'; bodyCol.style.maxWidth = '100%';
+      h.style.marginTop = '0';
+    } else {
+      split.style.flexDirection = 'row'; split.style.alignItems = 'flex-start';
+      titleCol.style.flex = '0 0 34%'; titleCol.style.width = '34%'; titleCol.style.maxWidth = '34%';
+      bodyCol.style.flex = '0 0 54%'; bodyCol.style.width = '54%'; bodyCol.style.maxWidth = '54%';
+      h.style.marginTop = padTop + 'px';
     }
     measure();
-    track.style.height='calc(100vh + '+(N*STEP)+'vh)';
+    track.style.height = 'calc(100vh + ' + (N * STEP) + 'vh)';
   }
-  function open(i){
-    if(i===cur)return; cur=i;
-    subs.forEach(function(s,j){
-      var on=j===i;
-      s.style.height=on?MAXH+'px':'0';
-      s.style.opacity=on?'1':'0';
-      s.style.marginTop=on?'10px':'0';
+  function open(i) {
+    if (i === curD) return; curD = i;
+    subs.forEach(function (s, j) {
+      var on = j === i;
+      s.style.height = on ? MAXH + 'px' : '0';
+      s.style.opacity = on ? '1' : '0';
+      s.style.marginTop = on ? '10px' : '0';
     });
   }
-  function R(){
-    var travel=track.offsetHeight-innerHeight;
-    var p=travel>0?-track.getBoundingClientRect().top/travel:0;
-    if(p<0){open(-1);return;}             // before the pin: all collapsed
-    if(p>1)p=1;
-    var idx=Math.floor(p*N); if(idx>N-1)idx=N-1;
+  function render() {
+    var travel = track.offsetHeight - innerHeight;
+    var p = travel > 0 ? -track.getBoundingClientRect().top / travel : 0;
+    if (p < 0) { open(-1); return; }
+    if (p > 1) p = 1;
+    var idx = Math.floor(p * N); if (idx > N - 1) idx = N - 1;
     open(idx);
   }
-  layout(); R();
-  addEventListener('scroll',R,{passive:1});
-  addEventListener('resize',function(){var c=cur;cur=-2;layout();open(c);R();});
+  layout(); render();
+  addEventListener('scroll', render, { passive: true });
+  addEventListener('resize', function () { var c = curD; curD = -2; layout(); open(c); render(); });
 })();
 
 
