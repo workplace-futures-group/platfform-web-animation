@@ -426,12 +426,23 @@ window.__PHI=function(){
   var W = document.createElement('div');
   W.id = 'hh-logo';
   W.style.cssText = 'position:fixed;z-index:1001;cursor:pointer;will-change:left,top,width';
-  // click the logo -> smooth-scroll to the first section after the hero
+  // click the logo -> eased scroll (600ms, ease-in-out) to the first section after the hero
+  function easeInOut(t) { return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2; }
+  function glideTo(targetY, dur) {
+    var startY = scrollY, dist = targetY - startY, t0 = null;
+    function step(ts) {
+      if (t0 === null) t0 = ts;
+      var p = Math.min(1, (ts - t0) / dur);
+      scrollTo(0, startY + dist * easeInOut(p));
+      if (p < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
   W.addEventListener('click', function () {
     var t = nav.nextElementSibling || hero.nextElementSibling;
     if (!t) return;
     var navH = nav.getBoundingClientRect().height;
-    scrollTo({ top: scrollY + t.getBoundingClientRect().top - navH, behavior: 'smooth' });
+    glideTo(scrollY + t.getBoundingClientRect().top - navH, 600);
   });
   var white = src.cloneNode(true);
   white.removeAttribute('class');
