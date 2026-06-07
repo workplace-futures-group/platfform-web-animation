@@ -1,14 +1,13 @@
 /*
  * whyreveal — About page. Light scroll-reveal for the (native) Why Choose Us
  * items: each fades + slides up as it enters the viewport, with a small stagger.
- * Content stays native/editable — this only animates it. About-gated; degrades
- * gracefully. The observe is deferred until after layout settles (and guarded
- * by the live rect) so below-fold items aren't revealed by an early/unsettled
- * IntersectionObserver callback.
+ * Content stays native/editable — this only animates it. About-gated.
+ * Uses a live-rect scroll check armed at full `load` (after images settle) so
+ * below-fold items are never revealed by an unsettled/short early layout.
  */
 (function () {
   if (!/^\/about(\/|$)/.test(location.pathname)) return;
-  if (!('IntersectionObserver' in window) || !window.requestAnimationFrame) return;
+  if (!window.requestAnimationFrame) return;
   var items = [].slice.call(document.querySelectorAll('.pf-list-item'));
   if (!items.length) return;
   items.forEach(function (it, i) {
@@ -17,18 +16,16 @@
     it.style.transition = 'opacity .6s ease ' + (i * 0.08) + 's, transform .6s ease ' + (i * 0.08) + 's';
     it.style.willChange = 'opacity, transform';
   });
-  function reveal(it) { it.style.opacity = '1'; it.style.transform = 'none'; }
-  function arm() {
-    var io = new IntersectionObserver(function (entries) {
-      entries.forEach(function (e) {
-        // guard with the live rect so an unsettled-layout callback can't reveal a below-fold item
-        if (e.isIntersecting && e.target.getBoundingClientRect().top < innerHeight * 0.95) {
-          reveal(e.target); io.unobserve(e.target);
-        }
-      });
-    }, { threshold: 0.2 });
-    items.forEach(function (it) { io.observe(it); });
+  function check() {
+    items.forEach(function (it) {
+      if (it.dataset.shown) return;
+      if (it.getBoundingClientRect().top < innerHeight * 0.85) {
+        it.style.opacity = '1'; it.style.transform = 'none'; it.dataset.shown = '1';
+      }
+    });
   }
-  // wait two frames (layout/fonts/images settle) before observing
-  requestAnimationFrame(function () { requestAnimationFrame(arm); });
+  var ticking = false;
+  function onScroll() { if (!ticking) { ticking = true; requestAnimationFrame(function () { check(); ticking = false; }); } }
+  function init() { check(); addEventListener('scroll', onScroll, { passive: true }); addEventListener('resize', onScroll); }
+  if (document.readyState === 'complete') init(); else addEventListener('load', init);
 })();
