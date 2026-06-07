@@ -66,11 +66,11 @@
     var w = lerp(S.bigW, S.dockW, p), scale = w / S.bigW;
     var tx = lerp(S.x0, S.dockX, p), ty = lerp(S.y0, S.dockY, p);
     W.style.transform = 'translate(' + tx + 'px,' + ty + 'px) scale(' + scale + ')';
-    white.style.opacity = p < 0.8 ? 1 : Math.max(0, 1 - (p - 0.8) / 0.2);   // fade out at dock (kills shadow bleed)
     var nr = nav.getBoundingClientRect();   // two-tone clip in the logo's local (pre-scale) coords
     var topL = Math.min(Math.max((nr.top - ty) / scale, 0), S.bigH);
     var botL = Math.min(Math.max(S.bigH - (nr.bottom - ty) / scale, 0), S.bigH);
     black.style.clipPath = 'inset(' + topL + 'px 0px ' + botL + 'px 0px)';
+    white.style.clipPath = 'inset(0px 0px ' + (S.bigH - topL) + 'px 0px)';  // white ONLY above the nav band -> drop-shadow never on the black/docked logo
     if (!S.mob && links) links.style.opacity = p < 0.5 ? 0 : (p - 0.5) / 0.5;
   }
   var ticking = false;

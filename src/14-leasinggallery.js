@@ -19,8 +19,8 @@
   var text = row.nextElementSibling;            // .pf-split (heading + body)
   var parent = row.parentNode;                  // .pf-container
   var GAP = parseFloat(getComputedStyle(row).columnGap) || 24;
-  // original vertical gap gallery -> text (measured before we move anything)
-  var G = text ? Math.max(0, text.getBoundingClientRect().top - row.getBoundingClientRect().bottom) : 48;
+  // gallery <-> text gap from the spacing design token (consistent, not the cramped measured gap)
+  var G = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--space-lg')) || 64;
 
   // 4 -> 8 (duplicate the tiles, keeping their bg-image classes)
   [].slice.call(row.children).forEach(function (t) { row.appendChild(t.cloneNode(true)); });
@@ -35,6 +35,7 @@
       t.style.aspectRatio = '1 / 1'; t.style.height = 'auto';
       t.style.scrollSnapAlign = 'start';
     });
+    if (text) text.style.marginTop = G + 'px';   // consistent gap below the carousel
     return;
   }
 
@@ -67,13 +68,15 @@
     pin.style.rowGap = G + 'px';
     S.blockH = tileW + G + (text ? text.offsetHeight : 0);
     S.travel = row.scrollWidth - pinW;            // horizontal distance to scrub
-    pin.style.top = ((innerHeight - S.blockH) / 2) + 'px';   // vertically centred
+    var navH = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--nav-h')) || 74;
+    S.topPos = Math.max(navH, (innerHeight - S.blockH) / 2);  // centred, but never under the nav
+    pin.style.top = S.topPos + 'px';
     track.style.height = (S.blockH + S.travel) + 'px';
   }
   function render() {
     var rect = track.getBoundingClientRect();
     var range = track.offsetHeight - S.blockH;    // == travel
-    var p = range > 0 ? (((innerHeight - S.blockH) / 2) - rect.top) / range : 0;
+    var p = range > 0 ? (S.topPos - rect.top) / range : 0;
     p = p < 0 ? 0 : p > 1 ? 1 : p;
     row.style.transform = 'translateX(' + (-p * S.travel) + 'px)';
   }

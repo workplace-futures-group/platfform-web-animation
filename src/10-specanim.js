@@ -8,7 +8,7 @@
  */
 (function(){if(location.pathname.length>1)return;var ill=document.querySelector('.pf-ill-spec');if(!ill)return;var row=ill.closest('.pf-svc-row');fetch('https://cdn.prod.website-files.com/6a18656c49b2496b48cfeaba/6a2343ca6f0fa76a0d373de9_illus-spec.svg').then(function(r){return r.text()}).then(function(t){
   var tk=document.createElement('div');tk.style.height='250vh';row.parentNode.insertBefore(tk,row);tk.appendChild(row);
-  row.style.cssText+=';position:sticky;top:0;min-height:100vh;align-items:center';
+  row.style.cssText+=';position:sticky;top:var(--nav-h);min-height:calc(100vh - var(--nav-h));align-items:center';
   var media=row.querySelector('.pf-media');media.style.cssText+=';display:flex;align-items:center;justify-content:center';
   ill.style.cssText+=';background:none;width:auto;height:auto;aspect-ratio:auto;max-width:100%';
   ill.innerHTML=t;
