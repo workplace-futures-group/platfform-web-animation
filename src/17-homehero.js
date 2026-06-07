@@ -1,14 +1,17 @@
 /*
  * homehero — HOME page, ALL breakpoints. Nav starts as a strip below the
- * full-screen hero and sticks to the top on scroll; a single PLATFFORM logo
- * starts big & white bottom-right and scrubs up-left, scaling down + flipping
+ * full-screen hero and sticks to the top on scroll; one PLATFFORM logo starts
+ * big & white bottom-right and scrubs up-left, scaling down + flipping
  * white->black (two-tone clip at the bar edge) into the nav's logo slot.
- * Big size, margins and the dock target are all derived per-breakpoint so the
- * morph always reads LARGE -> small (incl. mobile, where the nav logo is 16px).
- * On mobile the inline links are the burger menu, so links are NOT faded here.
+ *
+ * PERF: animates via GPU `transform` (translate+scale, never left/top/width),
+ * throttled to one update per animation frame; the drop-shadow is static and
+ * the white layer just fades its opacity out as it docks (cheap) instead of
+ * recomputing a filter every scroll event. Big size + dock target are derived
+ * per-breakpoint so it reads LARGE->small everywhere.
  */
 (function () {
-  if (location.pathname.length > 1) return;              // home only
+  if (location.pathname.length > 1) return;
   var hero = document.querySelector('.pf-hero');
   var nav = document.querySelector('.pf-nav');
   if (!hero || !nav || nav.dataset.hh) return;
@@ -21,62 +24,58 @@
   nav.style.setProperty('top', '0', 'important');
   nav.style.setProperty('z-index', '1000', 'important');
   nav.style.fontFamily = 'Gotham, sans-serif';
-  var navLogo = nav.querySelector('.pf-logo');
-  if (navLogo) navLogo.style.visibility = 'hidden';
+  var navLogo = nav.querySelector('.pf-logo'); if (navLogo) navLogo.style.visibility = 'hidden';
   var links = nav.querySelector('.pf-nav-links');
 
   function easeInOut(t) { return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2; }
   function glideTo(targetY, dur) {
-    var startY = scrollY, dist = targetY - startY, t0 = null;
-    function step(ts) { if (t0 === null) t0 = ts; var p = Math.min(1, (ts - t0) / dur); scrollTo(0, startY + dist * easeInOut(p)); if (p < 1) requestAnimationFrame(step); }
-    requestAnimationFrame(step);
+    var sY = scrollY, d = targetY - sY, t0 = null;
+    function st(ts) { if (t0 === null) t0 = ts; var pp = Math.min(1, (ts - t0) / dur); scrollTo(0, sY + d * easeInOut(pp)); if (pp < 1) requestAnimationFrame(st); }
+    requestAnimationFrame(st);
   }
-  var W = document.createElement('div');
-  W.id = 'hh-logo';
-  W.style.cssText = 'position:fixed;z-index:1001;cursor:pointer;will-change:left,top,width';
+
+  var W = document.createElement('div'); W.id = 'hh-logo';
+  W.style.cssText = 'position:fixed;left:0;top:0;z-index:1001;cursor:pointer;transform-origin:0 0;will-change:transform';
   W.addEventListener('click', function () {
-    var t = nav.nextElementSibling || hero.nextElementSibling;
-    if (!t) return;
-    var navH = nav.getBoundingClientRect().height;
-    glideTo(scrollY + t.getBoundingClientRect().top - navH, 600);
+    var t = nav.nextElementSibling || hero.nextElementSibling; if (!t) return;
+    var nh = nav.getBoundingClientRect().height;
+    glideTo(scrollY + t.getBoundingClientRect().top - nh, 600);
   });
   var white = src.cloneNode(true); white.removeAttribute('class');
-  white.style.cssText = 'position:absolute;left:0;top:0;width:100%;height:auto;display:block;color:#fff;fill:#fff';
+  white.style.cssText = 'position:absolute;left:0;top:0;width:100%;height:auto;display:block;color:#fff;fill:#fff;filter:drop-shadow(0 1px 14px rgba(0,0,0,.35))';
   var black = src.cloneNode(true); black.removeAttribute('class');
   black.style.cssText = 'position:absolute;left:0;top:0;width:100%;height:auto;display:block;color:#1A1A1A;fill:#1A1A1A';
-  W.appendChild(white); W.appendChild(black);
-  document.body.appendChild(W);
+  W.appendChild(white); W.appendChild(black); document.body.appendChild(W);
 
-  var ASPECT = 1610.4 / 177.6;          // logo wordmark aspect ratio
+  var ASPECT = 1610.4 / 177.6, S = {};
   function lerp(a, b, t) { return a + (b - a) * t; }
-
-  function R() {
-    var vh = innerHeight, vw = innerWidth;
-    var heroH = hero.getBoundingClientRect().height || vh;
-    var p = scrollY / heroH; p = p < 0 ? 0 : p > 1 ? 1 : p;
-    var mob = vw <= 767;
-    // docked slot, derived from the native nav padding + logo height per breakpoint
-    var padX = mob ? 24 : 40, padTop = mob ? 24 : 26;
-    var dockX = Math.max(padX, (vw - 1720) / 2 + padX);   // nav-inner is centred at max-width 1720
-    var dockY = padTop;
-    var dockW = (mob ? 16 : 22) * ASPECT;
-    // big start size + margin per breakpoint (always clearly larger than docked)
-    var bigW = mob ? vw * 0.74 : Math.min(vw * 0.46, 620);
+  function layout() {
+    var vw = innerWidth, vh = innerHeight, mob = vw <= 767;
+    S.mob = mob;
+    S.bigW = mob ? vw * 0.74 : Math.min(vw * 0.46, 620);
+    S.bigH = S.bigW / ASPECT;
     var margin = mob ? 24 : 48;
-    var bigH = bigW / ASPECT;
-    var w = lerp(bigW, dockW, p), h = w / ASPECT;
-    var x = lerp(vw - bigW - margin, dockX, p);
-    var y = lerp(vh - bigH - margin, dockY, p);
-    W.style.width = w + 'px'; W.style.left = x + 'px'; W.style.top = y + 'px';
-    white.style.filter = 'drop-shadow(0 1px 14px rgba(0,0,0,' + (0.35 * (1 - p)) + '))';
-    // two-tone: black layer only where the logo overlaps the nav bar band
-    var nr = nav.getBoundingClientRect();
-    var topIn = Math.min(Math.max(nr.top - y, 0), h);
-    var botIn = Math.min(Math.max((y + h) - nr.bottom, 0), h);
-    black.style.clipPath = 'inset(' + topIn + 'px 0px ' + botIn + 'px 0px)';
-    if (!mob && links) links.style.opacity = p < 0.5 ? 0 : (p - 0.5) / 0.5;  // links are the burger menu on mobile
+    S.x0 = vw - S.bigW - margin; S.y0 = vh - S.bigH - margin;
+    var padX = mob ? 24 : 40, padTop = mob ? 24 : 26;
+    S.dockX = Math.max(padX, (vw - 1720) / 2 + padX); S.dockY = padTop; S.dockW = (mob ? 16 : 22) * ASPECT;
+    S.heroH = hero.getBoundingClientRect().height || vh;
+    W.style.width = S.bigW + 'px';
   }
-  R();
-  addEventListener('scroll', R, { passive: true });
-  addEventListener('resize', R);
+  function R() {
+    var p = scrollY / S.heroH; p = p < 0 ? 0 : p > 1 ? 1 : p;
+    var w = lerp(S.bigW, S.dockW, p), scale = w / S.bigW;
+    var tx = lerp(S.x0, S.dockX, p), ty = lerp(S.y0, S.dockY, p);
+    W.style.transform = 'translate(' + tx + 'px,' + ty + 'px) scale(' + scale + ')';
+    white.style.opacity = p < 0.8 ? 1 : Math.max(0, 1 - (p - 0.8) / 0.2);   // fade out at dock (kills shadow bleed)
+    var nr = nav.getBoundingClientRect();   // two-tone clip in the logo's local (pre-scale) coords
+    var topL = Math.min(Math.max((nr.top - ty) / scale, 0), S.bigH);
+    var botL = Math.min(Math.max(S.bigH - (nr.bottom - ty) / scale, 0), S.bigH);
+    black.style.clipPath = 'inset(' + topL + 'px 0px ' + botL + 'px 0px)';
+    if (!S.mob && links) links.style.opacity = p < 0.5 ? 0 : (p - 0.5) / 0.5;
+  }
+  var ticking = false;
+  function onScroll() { if (!ticking) { ticking = true; requestAnimationFrame(function () { R(); ticking = false; }); } }
+  layout(); R();
+  addEventListener('scroll', onScroll, { passive: true });
+  addEventListener('resize', function () { layout(); R(); });
 })();

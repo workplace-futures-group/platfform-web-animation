@@ -22,12 +22,14 @@
     [].forEach.call(document.querySelectorAll('.pf-nav-inner'), function (inner) {
       var b = inner.querySelector('.pf-burger'), links = inner.querySelector('.pf-nav-links');
       if (!b || !links || b.dataset.mn) return; b.dataset.mn = '1';
-      function close() { b.classList.remove('pf-open'); links.classList.remove('pf-open'); document.body.style.overflow = ''; }
+      function hh(v) { var l = document.getElementById('hh-logo'); if (l) l.style.display = v; }
+      function close() { b.classList.remove('pf-open'); links.classList.remove('pf-open'); document.body.style.overflow = ''; hh(''); }
       b.addEventListener('click', function (e) {
         e.preventDefault();
         var open = links.classList.toggle('pf-open');
         b.classList.toggle('pf-open', open);
         document.body.style.overflow = open ? 'hidden' : '';
+        hh(open ? 'none' : '');   // hide the morphing hero logo while the menu is open
       });
       [].forEach.call(links.querySelectorAll('a'), function (a) { a.addEventListener('click', close); });
     });
