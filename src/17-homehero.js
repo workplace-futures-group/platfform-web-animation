@@ -9,6 +9,7 @@
  */
 (function () {
   if (location.pathname.length > 1) return;              // home only
+  if (window.PF_MOBILE && window.PF_MOBILE()) return;    // mobile: keep the normal fixed nav + hamburger (no logo-morph)
   var hero = document.querySelector('.pf-hero');
   var nav = document.querySelector('.pf-nav');
   if (!hero || !nav || nav.dataset.hh) return;
