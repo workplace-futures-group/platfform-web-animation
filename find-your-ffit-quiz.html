@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Find Your FFit — Quiz, Scoring &amp; Combined Reference</title>
+<style>
+  :root{
+    --ink:#1d1c1a;
+    --muted:#6b6760;
+    --line:#e4e0d8;
+    --paper:#faf8f4;
+    --card:#ffffff;
+    --accent:#3b6b5a;        /* considered green */
+    --scandi:#5b8a72;
+    --midcentury:#c0703a;
+    --classic:#8a6d3b;
+    --residential:#7a6e9c;
+    --sofa:#b5654a;
+    --lounge:#4f7d8a;
+    --table:#9a7b3f;
+    --artwork:#a14d77;
+    --flavour:#9a958c;
+    --radius:14px;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+    color:var(--ink);
+    background:var(--paper);
+    line-height:1.55;
+  }
+  .wrap{max-width:980px;margin:0 auto;padding:0 24px 120px;}
+
+  /* Header */
+  header.hero{
+    background:linear-gradient(160deg,#1d1c1a,#2c2a26);
+    color:#f7f4ee;
+    padding:64px 24px 56px;
+    text-align:center;
+  }
+  header.hero .inner{max-width:980px;margin:0 auto;}
+  header.hero h1{margin:0 0 10px;font-size:2.4rem;letter-spacing:-.02em;}
+  header.hero p{margin:0 auto;max-width:640px;color:#cfcabf;font-size:1.05rem;}
+  .tag-line{font-size:.8rem;letter-spacing:.18em;text-transform:uppercase;color:#9a948a;margin-bottom:18px;}
+
+  /* Sticky nav */
+  nav.toc{
+    position:sticky;top:0;z-index:20;
+    background:rgba(250,248,244,.92);
+    backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--line);
+    display:flex;gap:8px;justify-content:center;flex-wrap:wrap;
+    padding:12px 16px;
+  }
+  nav.toc a{
+    text-decoration:none;color:var(--muted);font-weight:600;font-size:.86rem;
+    padding:8px 16px;border-radius:999px;transition:.18s;
+    border:1px solid transparent;
+  }
+  nav.toc a:hover{color:var(--ink);background:#fff;border-color:var(--line);}
+
+  section{padding-top:56px;}
+  .section-head{border-bottom:2px solid var(--ink);padding-bottom:10px;margin-bottom:8px;display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;}
+  .section-head h2{margin:0;font-size:1.7rem;letter-spacing:-.01em;}
+  .section-head .num{font-size:.8rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);}
+  .section-intro{color:var(--muted);max-width:720px;margin:14px 0 28px;}
+
+  /* Question cards */
+  .q{
+    background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+    padding:22px 24px;margin:16px 0;box-shadow:0 1px 2px rgba(0,0,0,.03);
+  }
+  .q .qhead{display:flex;align-items:baseline;gap:12px;margin-bottom:14px;}
+  .q .qnum{
+    flex:0 0 auto;font-weight:800;font-size:.78rem;letter-spacing:.08em;color:#fff;
+    background:var(--ink);border-radius:8px;padding:4px 9px;
+  }
+  .q .qtext{font-size:1.12rem;font-weight:600;}
+  ul.opts{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  ul.opts.single{grid-template-columns:1fr;}
+  ul.opts li{
+    border:1px solid var(--line);border-radius:10px;padding:11px 14px;background:var(--paper);
+    display:flex;gap:10px;align-items:flex-start;font-size:.98rem;
+  }
+  .opt-letter{font-weight:700;color:var(--muted);flex:0 0 auto;}
+  .opt-body{flex:1;}
+  .map{
+    display:inline-block;margin-top:6px;font-size:.72rem;font-weight:700;letter-spacing:.04em;
+    text-transform:uppercase;padding:2px 8px;border-radius:999px;color:#fff;
+  }
+  .map .pts{opacity:.85;font-weight:600;}
+  /* category colours */
+  .c-scandi{background:var(--scandi);} .c-midcentury{background:var(--midcentury);}
+  .c-classic{background:var(--classic);} .c-residential{background:var(--residential);}
+  .c-sofa{background:var(--sofa);} .c-lounge{background:var(--lounge);}
+  .c-table{background:var(--table);} .c-artwork{background:var(--artwork);}
+  .c-flavour{background:var(--flavour);}
+
+  /* Section banners inside question lists */
+  .block-banner{
+    margin:34px 0 6px;padding:14px 18px;border-radius:12px;border:1px dashed var(--line);
+    background:#fff;
+  }
+  .block-banner h3{margin:0 0 4px;font-size:1.05rem;}
+  .block-banner .meta{font-size:.82rem;color:var(--muted);}
+  .pill{display:inline-block;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;
+    padding:3px 9px;border-radius:999px;background:#efece5;color:var(--muted);margin-left:6px;}
+
+  /* Tables */
+  table{width:100%;border-collapse:collapse;margin:18px 0;background:#fff;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;}
+  caption{caption-side:top;text-align:left;font-weight:700;margin-bottom:8px;color:var(--ink);}
+  th,td{padding:10px 14px;text-align:left;border-bottom:1px solid var(--line);font-size:.92rem;vertical-align:top;}
+  th{background:#f1eee7;font-size:.76rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);}
+  tr:last-child td{border-bottom:none;}
+  td.center,th.center{text-align:center;}
+  .axis-style{color:var(--scandi);font-weight:700;}
+  .axis-expr{color:var(--sofa);font-weight:700;}
+  .axis-flavour{color:var(--flavour);font-weight:700;}
+
+  /* callout */
+  .callout{
+    border-left:4px solid var(--accent);background:#fff;border-radius:0 12px 12px 0;
+    padding:16px 20px;margin:22px 0;
+  }
+  .callout strong{color:var(--accent);}
+
+  /* outcome grid */
+  .grid-outcomes{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:18px 0;}
+  .grid-outcomes .cell{background:#fff;border:1px solid var(--line);border-radius:10px;padding:12px;text-align:center;font-size:.86rem;}
+  .grid-outcomes .cell .s{font-weight:700;display:block;}
+  .grid-outcomes .cell .e{color:var(--muted);font-size:.8rem;}
+  .legend{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 4px;}
+  .legend .map{margin:0;cursor:default;}
+
+  .combined .q{border-left:4px solid var(--accent);}
+  .flavour-q .qnum{background:var(--flavour);}
+  .flavour-q{border-left-color:var(--flavour)!important;}
+
+  footer{color:var(--muted);font-size:.82rem;text-align:center;padding-top:40px;border-top:1px solid var(--line);margin-top:60px;}
+
+  @media(max-width:640px){
+    ul.opts{grid-template-columns:1fr;}
+    .grid-outcomes{grid-template-columns:repeat(2,1fr);}
+    header.hero h1{font-size:1.9rem;}
+  }
+  @media print{
+    nav.toc{display:none;}
+    .q,table,.callout{box-shadow:none;}
+    section{page-break-inside:avoid;}
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="inner">
+    <div class="tag-line">Platfform &middot; Find Your FFit</div>
+    <h1>Find Your FFit — Quiz Reference</h1>
+    <p>A personality-led redesign of the 16-question quiz. Four Primary Styles &times; four Secondary Expressions = 16 outcomes. This document holds three views: the clean questions, the scoring logic, and the two combined.</p>
+  </div>
+</header>
+
+<nav class="toc">
+  <a href="#section-questions">1 &middot; Questions</a>
+  <a href="#section-scoring">2 &middot; Scoring</a>
+  <a href="#section-combined">3 &middot; Questions + Scoring</a>
+</nav>
+
+<div class="wrap">
+
+  <!-- ============================ SECTION 1: QUESTIONS ============================ -->
+  <section id="section-questions">
+    <div class="section-head">
+      <span class="num">Section 1</span>
+      <h2>The Questions</h2>
+    </div>
+    <p class="section-intro">
+      Exactly what the respondent sees — no scoring, no tags. Sixteen questions, four options each,
+      framed around <em>who you are</em> rather than what you already own. Q14 is a flavour question:
+      it feels identical to the rest but doesn't influence the result.
+    </p>
+
+    <!-- Block 1 -->
+    <div class="block-banner">
+      <h3>Questions 1–4 <span class="pill">Mindset</span></h3>
+      <div class="meta">How you think about design.</div>
+    </div>
+
+    <article class="q">
+      <div class="qhead"><span class="qnum">Q1</span><span class="qtext">Your ideal space feels most like you when it's…</span></div>
+      <ul class="opts">
+        <li><span class="opt-letter">A</span><span class="opt-body">Calm, light, uncluttered</span></li>
+        <li><span class="opt-letter">B</span><span class="opt-body">Characterful and personal</span></li>
+        <li><span class="opt-letter">C</span><span class="opt-body">Refined and timeless</span></li>
+        <li><span class="opt-letter">D</span><span class="opt-body">Warm and easy to live in</span></li>
+      </ul>
+    </article>
+
+    <article class="q">
+      <div class="qhead"><span class="qnum">Q2</span><span class="qtext">You're instinctively drawn to pieces that…</span></div>
+      <ul class="opts">
+        <li><span class="opt-letter">A</span><span class="opt-body">Quietly do their job</span></li>
+        <li><span class="opt-letter">B</span><span class="opt-body">Define a room's character</span></li>
+        <li><span class="opt-letter">C</span><span class="opt-body">Are built to last a lifetime</span></li>
+        <li><span class="opt-letter">D</span><span class="opt-body">Invite you to kick back</span></li>
+      </ul>
+    </article>
+
+    <article class="q">
+      <div class="qhead"><span class="qnum">Q3</span><span class="qtext">What you value most, deep down:</span></div>
+      <ul class="opts">
+        <li><span class="opt-letter">A</span><span class="opt-body">Clarity and calm</span></li>
+        <li><span class="opt-letter">B</span><span class="opt-body">Personality and expression</span></li>
+        <li><span class="opt-letter">C</span><span class="opt-body">Longevity and proven quality</span></li>
+        <li><span class="opt-letter">D</span><span class="opt-body">Comfort and ease</span></li>
+      </ul>
+    </article>
+
+    <article class="q">
+      <div class="qhead"><span class="qnum">Q4</span><span class="qtext">A room finally feels <em>right</em> to you when it's…</span></div>
+      <ul class="opts">
+        <li><span class="opt-letter">A</span><span class="opt-body">Calm and resolved</span></li>
+        <li><span class="opt-letter">B</span><span class="opt-body">Lived-in and expressive</span></li>
+        <li><span class="opt-letter">C</span><span class="opt-body">Polished and enduring</span></li>
+        <li><span class="opt-letter">D</span><span class="opt-body">Soft and welcoming</span></li>
+      </ul>
+    </article>
+
+    <!-- Block 2 -->
+    <div class="block-banner">
+      <h3>Questions 5–8 <span class="pill">Behaviour</span></h3>
+      <div class="meta">How you use and experience a space.</div>
+    </div>
+
+    <article class="q">
+      <div class="qhead"><span class="qnum">Q5</span><span class="qtext">Your favourite place at home is…</span></div>
+      <ul class="opts">
+        <li><span class="opt-letter">A</span><span class="opt-body">The sofa, everyone together</span></li>
+        <li><span class="opt-letter">B</span><span class="opt-body">Your own chair to recharge in</span></li>
+        <li><span class="opt-letter">C</span><span class="opt-body">The table, where people gather</span></li>
+        <li><span class="opt-letter">D</span><span class="opt-body">Among the things you love to look at</span></li>
+      </ul>
+    </article>
+
+    <article class="q">
+      <div class="qhead"><span class="qnum">Q6</span><span class="qtext">You feel most <em>you</em> in a space when…</span></div>
+      <ul class="opts">
+        <li><span class="opt-letter">A</span><span class="opt-body">You can flop and fully relax</span></li>
+        <li><span class="opt-letter">B</span><span class="opt-body">You've a quiet corner of your own</span></li>
+        <li><span class="opt-letter">C</span><span class="opt-body">It brings people together</span></li>
+        <li><span class="opt-letter">D</span><span class="opt-body">It reflects your personality back</span></li>
+      </ul>
+    </article>
+
+    <article class="q">
+      <div class="qhead"><span class="qnum">Q7</span><span class="qtext">When you host, you most want guests to…</span></div>
+      <ul class="opts">
+        <li><span class="opt-letter">A</span><span class="opt-body">Sink in and feel at home</span></li>
+        <li><span class="opt-letter">B</span><span class="opt-body">Find a cosy spot to settle</span></li>
+        <li><span class="opt-letter">C</span><span class="opt-body">Gather, eat, and linger</span></li>
+        <li><span class="opt-letter">D</span><span class="opt-body">Be wowed by the space</span></li>
+      </ul>
+    </article>
+
+    <article class="q">
+      <div class="qhead"><span class="qnum">Q8</span><span class="qtext">The one great piece you'd invest in first:</span></div>
+      <ul class="opts">
+        <li><span class="opt-letter">A</span><span class="opt-body">An irresistibly comfortable sofa</span></li>
+        <li><span class="opt-letter">B</span><span class="opt-body">A sculptural lounge chair</span></li>
+        <li><span class="opt-letter">C</span><span class="opt-body">A table for years of dinners</span></li>
+        <li><span class="opt-letter">D</span><span class="opt-body">A statement piece that stops people</span></li>
+      </ul>
+    </article>
+
+    <!-- Block 3 -->
+    <div class="block-banner">
+      <h3>Questions 9–12 <span class="pill">Refinement</span></h3>
+      <div class="meta">Sharpening the result when tastes are mixed.</div>
+    </div>
+
+    <article class="q">
+      <div class="qhead"><span class="qnum">Q9</span><span class="qtext">Above all, your home should…</span></div>
+      <ul class="opts">
+        <li><span class="opt-letter">A</span><span class="opt-body">Clear your head</span></li>
+        <li><span class="opt-letter">B</span><span class="opt-body">Spark and inspire you</span></li>
+        <li><span class="opt-letter">C</span><span class="opt-body">Feel grounded and enduring</span></li>
+        <li><span class="opt-letter">D</span><span class="opt-body">Support how you actually live</span></li>
+      </ul>
+    </article>
+
+    <article class="q">
+      <div class="qhead"><span class="qnum">Q10</span><span class="qtext">Good design, to you, is…</span></div>
+      <ul class="opts">
+        <li><span class="opt-letter">A</span><span class="opt-body">Quietly intelligent</span></li>
+        <li><span class="opt-letter">B</span><span class="opt-body">Confident, full of character</span></li>
+        <li><span class="opt-letter">C</span><span class="opt-body">Time-tested</span></li>
+        <li><span class="opt-letter">D</span><span class="opt-body">Effortlessly comfortable</span></li>
+      </ul>
+    </article>
+
+    <article class="q">
+      <div class="qhead"><span class="qnum">Q11</span><span class="qtext">The detail you notice first in someone else's home:</span></div>
+      <ul class="opts">
+        <li><span class="opt-letter">A</span><span class="opt-body">How inviting the seating is</span></li>
+        <li><span class="opt-letter">B</span><span class="opt-body">That one perfect chair</span></li>
+        <li><span class="opt-letter">C</span><span class="opt-body">The table and how it's set</span></li>
+        <li><span class="opt-letter">D</span><span class="opt-body">What's on the walls and shelves</span></li>
+      </ul>
+    </article>
+
+    <article class="q">
+      <div class="qhead"><span class="qnum">Q12</span><span class="qtext">Your home should feel…</span></div>
+      <ul class="opts">
+        <li><span class="opt-letter">A</span><span class="opt-body">Light and serene</span></li>
+        <li><span class="opt-letter">B</span><span class="opt-body">Flexible and evolving</span></li>
+        <li><span class="opt-letter">C</span><span class="opt-body">Grounded and settled</span></li>
+        <li><span class="opt-letter">D</span><span class="opt-body">Easy and unfussy</span></li>
+      </ul>
+    </article>
+
+    <!-- Block 4 -->
+    <div class="block-banner">
+      <h3>Questions 13–16 <span class="pill">Blend clarity</span></h3>
+      <div class="meta">Light tie-breakers, plus one flavour question for feel.</div>
+    </div>
+
+    <article class="q">
+      <div class="qhead"><span class="qnum">Q13</span><span class="qtext">A lazy Sunday at home is…</span></div>
+      <ul class="opts">
+        <li><span class="opt-letter">A</span><span class="opt-body">Curled on the sofa all day</span></li>
+        <li><span class="opt-letter">B</span><span class="opt-body">Reading in your favourite chair</span></li>
+        <li><span class="opt-letter">C</span><span class="opt-body">A long, slow lunch at the table</span></li>
+        <li><span class="opt-letter">D</span><span class="opt-body">Pottering and rearranging</span></li>
+      </ul>
+    </article>
+
+    <article class="q flavour-q">
+      <div class="qhead"><span class="qnum">Q14</span><span class="qtext">If your home had a soundtrack:</span></div>
+      <ul class="opts">
+        <li><span class="opt-letter">A</span><span class="opt-body">Ambient and spacious</span></li>
+        <li><span class="opt-letter">B</span><span class="opt-body">Loud and joyful</span></li>
+        <li><span class="opt-letter">C</span><span class="opt-body">Soft acoustic warmth</span></li>
+        <li><span class="opt-letter">D</span><span class="opt-body">Vinyl crackle</span></li>
+      </ul>
+    </article>
+
+    <article class="q">
+      <div class="qhead"><span class="qnum">Q15</span><span class="qtext">You're naturally the kind of person who…</span></div>
+      <ul class="opts">
+        <li><span class="opt-letter">A</span><span class="opt-body">Likes things calm and in order</span></li>
+        <li><span class="opt-letter">B</span><span class="opt-body">Loves bold personality</span></li>
+        <li><span class="opt-letter">C</span><span class="opt-body">Values quality over trends</span></li>
+        <li><span class="opt-letter">D</span><span class="opt-body">Puts comfort first</span></li>
+      </ul>
+    </article>
+
+    <article class="q">
+      <div class="qhead"><span class="qnum">Q16</span><span class="qtext">You'd rather live with…</span></div>
+      <ul class="opts">
+        <li><span class="opt-letter">A</span><span class="opt-body">A few perfect, pared-back pieces</span></li>
+        <li><span class="opt-letter">B</span><span class="opt-body">A collection of characterful finds</span></li>
+        <li><span class="opt-letter">C</span><span class="opt-body">One beautifully made heirloom</span></li>
+        <li><span class="opt-letter">D</span><span class="opt-body">Whatever's most comfortable</span></li>
+      </ul>
+    </article>
+  </section>
+
+  <!-- ============================ SECTION 2: SCORING ============================ -->
+  <section id="section-scoring">
+    <div class="section-head">
+      <span class="num">Section 2</span>
+      <h2>The Scoring</h2>
+    </div>
+    <p class="section-intro">
+      The engine on its own. Two independent axes are tallied across the quiz; the top of each combines into
+      the result. Q14 scores nothing.
+    </p>
+
+    <div class="callout">
+      <strong>Final result =</strong> Primary Style (highest Style total) &nbsp;–&nbsp; Secondary Expression (highest Expression total).
+      <br>e.g. <em>Mid-Century – Artwork</em>, <em>Scandinavian – Lounge Chair</em>, <em>Classic – Table</em>, <em>Residential – Sofa</em>.
+    </div>
+
+    <h3>The two axes</h3>
+    <div class="legend">
+      <span class="map c-scandi">Scandinavian</span>
+      <span class="map c-midcentury">Mid-Century</span>
+      <span class="map c-classic">Classic</span>
+      <span class="map c-residential">Residential</span>
+    </div>
+    <div class="legend">
+      <span class="map c-sofa">Sofa</span>
+      <span class="map c-lounge">Lounge Chair</span>
+      <span class="map c-table">Table</span>
+      <span class="map c-artwork">Artwork</span>
+      <span class="map c-flavour">Flavour (no score)</span>
+    </div>
+
+    <table>
+      <caption>Weight tiers (carried over from V2.1)</caption>
+      <thead>
+        <tr><th>Block</th><th>Questions</th><th>Purpose</th><th class="center">Weight per answer</th><th>Axis scored</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>1</td><td>Q1–Q4</td><td>Mindset / Style drivers</td><td class="center">&times;1.5</td><td class="axis-style">Style</td></tr>
+        <tr><td>2</td><td>Q5–Q8</td><td>Behaviour / Expression drivers</td><td class="center">&times;2.0</td><td class="axis-expr">Expression</td></tr>
+        <tr><td>3</td><td>Q9–Q12</td><td>Refinement &amp; balance</td><td class="center">&times;1.0</td><td>Mixed</td></tr>
+        <tr><td>4</td><td>Q13–Q16</td><td>Blend clarity</td><td class="center">&times;0.75</td><td>Mixed (Q14 = 0)</td></tr>
+      </tbody>
+    </table>
+
+    <table>
+      <caption>Per-answer scoring map — all 16 questions</caption>
+      <thead>
+        <tr><th>Q</th><th class="center">Wt</th><th>A scores</th><th>B scores</th><th>C scores</th><th>D scores</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Q1</td><td class="center">1.5</td><td><span class="map c-scandi">Scandi</span></td><td><span class="map c-midcentury">Mid-Century</span></td><td><span class="map c-classic">Classic</span></td><td><span class="map c-residential">Residential</span></td></tr>
+        <tr><td>Q2</td><td class="center">1.5</td><td><span class="map c-scandi">Scandi</span></td><td><span class="map c-midcentury">Mid-Century</span></td><td><span class="map c-classic">Classic</span></td><td><span class="map c-residential">Residential</span></td></tr>
+        <tr><td>Q3</td><td class="center">1.5</td><td><span class="map c-scandi">Scandi</span></td><td><span class="map c-midcentury">Mid-Century</span></td><td><span class="map c-classic">Classic</span></td><td><span class="map c-residential">Residential</span></td></tr>
+        <tr><td>Q4</td><td class="center">1.5</td><td><span class="map c-scandi">Scandi</span></td><td><span class="map c-midcentury">Mid-Century</span></td><td><span class="map c-classic">Classic</span></td><td><span class="map c-residential">Residential</span></td></tr>
+        <tr><td>Q5</td><td class="center">2.0</td><td><span class="map c-sofa">Sofa</span></td><td><span class="map c-lounge">Lounge Chair</span></td><td><span class="map c-table">Table</span></td><td><span class="map c-artwork">Artwork</span></td></tr>
+        <tr><td>Q6</td><td class="center">2.0</td><td><span class="map c-sofa">Sofa</span></td><td><span class="map c-lounge">Lounge Chair</span></td><td><span class="map c-table">Table</span></td><td><span class="map c-artwork">Artwork</span></td></tr>
+        <tr><td>Q7</td><td class="center">2.0</td><td><span class="map c-sofa">Sofa</span></td><td><span class="map c-lounge">Lounge Chair</span></td><td><span class="map c-table">Table</span></td><td><span class="map c-artwork">Artwork</span></td></tr>
+        <tr><td>Q8</td><td class="center">2.0</td><td><span class="map c-sofa">Sofa</span></td><td><span class="map c-lounge">Lounge Chair</span></td><td><span class="map c-table">Table</span></td><td><span class="map c-artwork">Artwork</span></td></tr>
+        <tr><td>Q9</td><td class="center">1.0</td><td><span class="map c-scandi">Scandi</span></td><td><span class="map c-midcentury">Mid-Century</span></td><td><span class="map c-classic">Classic</span></td><td><span class="map c-residential">Residential</span></td></tr>
+        <tr><td>Q10</td><td class="center">1.0</td><td><span class="map c-scandi">Scandi</span></td><td><span class="map c-midcentury">Mid-Century</span></td><td><span class="map c-classic">Classic</span></td><td><span class="map c-residential">Residential</span></td></tr>
+        <tr><td>Q11</td><td class="center">1.0</td><td><span class="map c-sofa">Sofa</span></td><td><span class="map c-lounge">Lounge Chair</span></td><td><span class="map c-table">Table</span></td><td><span class="map c-artwork">Artwork</span></td></tr>
+        <tr><td>Q12</td><td class="center">1.0</td><td><span class="map c-scandi">Scandi</span></td><td><span class="map c-midcentury">Mid-Century</span></td><td><span class="map c-classic">Classic</span></td><td><span class="map c-residential">Residential</span></td></tr>
+        <tr><td>Q13</td><td class="center">0.75</td><td><span class="map c-sofa">Sofa</span></td><td><span class="map c-lounge">Lounge Chair</span></td><td><span class="map c-table">Table</span></td><td><span class="map c-artwork">Artwork</span></td></tr>
+        <tr><td>Q14</td><td class="center">0</td><td colspan="4"><span class="map c-flavour">Flavour — no score (looks identical to the user)</span></td></tr>
+        <tr><td>Q15</td><td class="center">0.75</td><td><span class="map c-scandi">Scandi</span></td><td><span class="map c-midcentury">Mid-Century</span></td><td><span class="map c-classic">Classic</span></td><td><span class="map c-residential">Residential</span></td></tr>
+        <tr><td>Q16</td><td class="center">0.75</td><td><span class="map c-scandi">Scandi</span></td><td><span class="map c-midcentury">Mid-Century</span></td><td><span class="map c-classic">Classic</span></td><td><span class="map c-residential">Residential</span></td></tr>
+      </tbody>
+    </table>
+
+    <table>
+      <caption>Maximum points available per category (sanity check)</caption>
+      <thead>
+        <tr><th>Axis</th><th>Category</th><th>Scoring questions</th><th class="center">Max points</th></tr>
+      </thead>
+      <tbody>
+        <tr><td rowspan="4" class="axis-style">Style</td><td>Scandinavian</td><td>Q1–4(A), Q9·10·12(A), Q15·16(A)</td><td class="center">8.25</td></tr>
+        <tr><td>Mid-Century</td><td>Q1–4(B), Q9·10·12(B), Q15·16(B)</td><td class="center">8.25</td></tr>
+        <tr><td>Classic</td><td>Q1–4(C), Q9·10·12(C), Q15·16(C)</td><td class="center">8.25</td></tr>
+        <tr><td>Residential</td><td>Q1–4(D), Q9·10·12(D), Q15·16(D)</td><td class="center">8.25</td></tr>
+        <tr><td rowspan="4" class="axis-expr">Expression</td><td>Sofa</td><td>Q5–8(A), Q11(A), Q13(A)</td><td class="center">9.75</td></tr>
+        <tr><td>Lounge Chair</td><td>Q5–8(B), Q11(B), Q13(B)</td><td class="center">9.75</td></tr>
+        <tr><td>Table</td><td>Q5–8(C), Q11(C), Q13(C)</td><td class="center">9.75</td></tr>
+        <tr><td>Artwork</td><td>Q5–8(D), Q11(D), Q13(D)</td><td class="center">9.75</td></tr>
+      </tbody>
+    </table>
+    <p class="section-intro" style="margin-top:6px;">
+      Both axes are internally even (every category can win), so no style or expression is structurally favoured —
+      the result depends entirely on the answers.
+    </p>
+
+    <h3>The 16 possible outcomes</h3>
+    <div class="grid-outcomes">
+      <div class="cell"><span class="s">Scandinavian</span><span class="e">Sofa</span></div>
+      <div class="cell"><span class="s">Scandinavian</span><span class="e">Lounge Chair</span></div>
+      <div class="cell"><span class="s">Scandinavian</span><span class="e">Table</span></div>
+      <div class="cell"><span class="s">Scandinavian</span><span class="e">Artwork</span></div>
+      <div class="cell"><span class="s">Mid-Century</span><span class="e">Sofa</span></div>
+      <div class="cell"><span class="s">Mid-Century</span><span class="e">Lounge Chair</span></div>
+      <div class="cell"><span class="s">Mid-Century</span><span class="e">Table</span></div>
+      <div class="cell"><span class="s">Mid-Century</span><span class="e">Artwork</span></div>
+      <div class="cell"><span class="s">Classic</span><span class="e">Sofa</span></div>
+      <div class="cell"><span class="s">Classic</span><span class="e">Lounge Chair</span></div>
+      <div class="cell"><span class="s">Classic</span><span class="e">Table</span></div>
+      <div class="cell"><span class="s">Classic</span><span class="e">Artwork</span></div>
+      <div class="cell"><span class="s">Residential</span><span class="e">Sofa</span></div>
+      <div class="cell"><span class="s">Residential</span><span class="e">Lounge Chair</span></div>
+      <div class="cell"><span class="s">Residential</span><span class="e">Table</span></div>
+      <div class="cell"><span class="s">Residential</span><span class="e">Artwork</span></div>
+    </div>
+
+    <div class="callout">
+      <strong>Tie-breaks.</strong> If two categories on an axis tie, the answer given to the
+      highest-weighted question on that axis wins (Block 2 for Expression, Block 1 for Style).
+      Failing that, the earliest-answered of the tied options takes it.
+    </div>
+  </section>
+
+  <!-- ============================ SECTION 3: COMBINED ============================ -->
+  <section id="section-combined" class="combined">
+    <div class="section-head">
+      <span class="num">Section 3</span>
+      <h2>Questions + Scoring</h2>
+    </div>
+    <p class="section-intro">
+      The build reference: every question with each answer's category and points shown inline.
+      Use this to wire up the quiz. (The chips are never shown to the respondent.)
+    </p>
+
+    <!-- Block 1 -->
+    <div class="block-banner">
+      <h3>Questions 1–4 <span class="pill">Mindset &middot; &times;1.5 &middot; Style</span></h3>
+    </div>
+
+    <article class="q">
+      <div class="qhead"><span class="qnum">Q1</span><span class="qtext">Your ideal space feels most like you when it's…</span></div>
+      <ul class="opts">
+        <li><span class="opt-letter">A</span><span class="opt-body">Calm, light, uncluttered<br><span class="map c-scandi">Scandinavian <span class="pts">+1.5</span></span></span></li>
+        <li><span class="opt-letter">B</span><span class="opt-body">Characterful and personal<br><span class="map c-midcentury">Mid-Century <span class="pts">+1.5</span></span></span></li>
+        <li><span class="opt-letter">C</span><span class="opt-body">Refined and timeless<br><span class="map c-classic">Classic <span class="pts">+1.5</span></span></span></li>
+        <li><span class="opt-letter">D</span><span class="opt-body">Warm and easy to live in<br><span class="map c-residential">Residential <span class="pts">+1.5</span></span></span></li>
+      </ul>
+    </article>
+
+    <article class="q">
+      <div class="qhead"><span class="qnum">Q2</span><span class="qtext">You're instinctively drawn to pieces that…</span></div>
+      <ul class="opts">
+        <li><span class="opt-letter">A</span><span class="opt-body">Quietly do their job<br><span class="map c-scandi">Scandinavian <span class="pts">+1.5</span></span></span></li>
+        <li><span class="opt-letter">B</span><span class="opt-body">Define a room's character<br><span class="map c-midcentury">Mid-Century <span class="pts">+1.5</span></span></span></li>
+        <li><span class="opt-letter">C</span><span class="opt-body">Are built to last a lifetime<br><span class="map c-classic">Classic <span class="pts">+1.5</span></span></span></li>
+        <li><span class="opt-letter">D</span><span class="opt-body">Invite you to kick back<br><span class="map c-residential">Residential <span class="pts">+1.5</span></span></span></li>
+      </ul>
+    </article>
+
+    <article class="q">
+      <div class="qhead"><span class="qnum">Q3</span><span class="qtext">What you value most, deep down:</span></div>
+      <ul class="opts">
+        <li><span class="opt-letter">A</span><span class="opt-body">Clarity and calm<br><span class="map c-scandi">Scandinavian <span class="pts">+1.5</span></span></span></li>
+        <li><span class="opt-letter">B</span><span class="opt-body">Personality and expression<br><span class="map c-midcentury">Mid-Century <span class="pts">+1.5</span></span></span></li>
+        <li><span class="opt-letter">C</span><span class="opt-body">Longevity and proven quality<br><span class="map c-classic">Classic <span class="pts">+1.5</span></span></span></li>
+        <li><span class="opt-letter">D</span><span class="opt-body">Comfort and ease<br><span class="map c-residential">Residential <span class="pts">+1.5</span></span></span></li>
+      </ul>
+    </article>
+
+    <article class="q">
+      <div class="qhead"><span class="qnum">Q4</span><span class="qtext">A room finally feels <em>right</em> to you when it's…</span></div>
+      <ul class="opts">
+        <li><span class="opt-letter">A</span><span class="opt-body">Calm and resolved<br><span class="map c-scandi">Scandinavian <span class="pts">+1.5</span></span></span></li>
+        <li><span class="opt-letter">B</span><span class="opt-body">Lived-in and expressive<br><span class="map c-midcentury">Mid-Century <span class="pts">+1.5</span></span></span></li>
+        <li><span class="opt-letter">C</span><span class="opt-body">Polished and enduring<br><span class="map c-classic">Classic <span class="pts">+1.5</span></span></span></li>
+        <li><span class="opt-letter">D</span><span class="opt-body">Soft and welcoming<br><span class="map c-residential">Residential <span class="pts">+1.5</span></span></span></li>
+      </ul>
+    </article>
+
+    <!-- Block 2 -->
+    <div class="block-banner">
+      <h3>Questions 5–8 <span class="pill">Behaviour &middot; &times;2.0 &middot; Expression</span></h3>
+    </div>
+
+    <article class="q">
+      <div class="qhead"><span class="qnum">Q5</span><span class="qtext">Your favourite place at home is…</span></div>
+      <ul class="opts">
+        <li><span class="opt-letter">A</span><span class="opt-body">The sofa, everyone together<br><span class="map c-sofa">Sofa <span class="pts">+2.0</span></span></span></li>
+        <li><span class="opt-letter">B</span><span class="opt-body">Your own chair to recharge in<br><span class="map c-lounge">Lounge Chair <span class="pts">+2.0</span></span></span></li>
+        <li><span class="opt-letter">C</span><span class="opt-body">The table, where people gather<br><span class="map c-table">Table <span class="pts">+2.0</span></span></span></li>
+        <li><span class="opt-letter">D</span><span class="opt-body">Among the things you love to look at<br><span class="map c-artwork">Artwork <span class="pts">+2.0</span></span></span></li>
+      </ul>
+    </article>
+
+    <article class="q">
+      <div class="qhead"><span class="qnum">Q6</span><span class="qtext">You feel most <em>you</em> in a space when…</span></div>
+      <ul class="opts">
+        <li><span class="opt-letter">A</span><span class="opt-body">You can flop and fully relax<br><span class="map c-sofa">Sofa <span class="pts">+2.0</span></span></span></li>
+        <li><span class="opt-letter">B</span><span class="opt-body">You've a quiet corner of your own<br><span class="map c-lounge">Lounge Chair <span class="pts">+2.0</span></span></span></li>
+        <li><span class="opt-letter">C</span><span class="opt-body">It brings people together<br><span class="map c-table">Table <span class="pts">+2.0</span></span></span></li>
+        <li><span class="opt-letter">D</span><span class="opt-body">It reflects your personality back<br><span class="map c-artwork">Artwork <span class="pts">+2.0</span></span></span></li>
+      </ul>
+    </article>
+
+    <article class="q">
+      <div class="qhead"><span class="qnum">Q7</span><span class="qtext">When you host, you most want guests to…</span></div>
+      <ul class="opts">
+        <li><span class="opt-letter">A</span><span class="opt-body">Sink in and feel at home<br><span class="map c-sofa">Sofa <span class="pts">+2.0</span></span></span></li>
+        <li><span class="opt-letter">B</span><span class="opt-body">Find a cosy spot to settle<br><span class="map c-lounge">Lounge Chair <span class="pts">+2.0</span></span></span></li>
+        <li><span class="opt-letter">C</span><span class="opt-body">Gather, eat, and linger<br><span class="map c-table">Table <span class="pts">+2.0</span></span></span></li>
+        <li><span class="opt-letter">D</span><span class="opt-body">Be wowed by the space<br><span class="map c-artwork">Artwork <span class="pts">+2.0</span></span></span></li>
+      </ul>
+    </article>
+
+    <article class="q">
+      <div class="qhead"><span class="qnum">Q8</span><span class="qtext">The one great piece you'd invest in first:</span></div>
+      <ul class="opts">
+        <li><span class="opt-letter">A</span><span class="opt-body">An irresistibly comfortable sofa<br><span class="map c-sofa">Sofa <span class="pts">+2.0</span></span></span></li>
+        <li><span class="opt-letter">B</span><span class="opt-body">A sculptural lounge chair<br><span class="map c-lounge">Lounge Chair <span class="pts">+2.0</span></span></span></li>
+        <li><span class="opt-letter">C</span><span class="opt-body">A table for years of dinners<br><span class="map c-table">Table <span class="pts">+2.0</span></span></span></li>
+        <li><span class="opt-letter">D</span><span class="opt-body">A statement piece that stops people<br><span class="map c-artwork">Artwork <span class="pts">+2.0</span></span></span></li>
+      </ul>
+    </article>
+
+    <!-- Block 3 -->
+    <div class="block-banner">
+      <h3>Questions 9–12 <span class="pill">Refinement &middot; &times;1.0</span></h3>
+    </div>
+
+    <article class="q">
+      <div class="qhead"><span class="qnum">Q9</span><span class="qtext">Above all, your home should…</span></div>
+      <ul class="opts">
+        <li><span class="opt-letter">A</span><span class="opt-body">Clear your head<br><span class="map c-scandi">Scandinavian <span class="pts">+1.0</span></span></span></li>
+        <li><span class="opt-letter">B</span><span class="opt-body">Spark and inspire you<br><span class="map c-midcentury">Mid-Century <span class="pts">+1.0</span></span></span></li>
+        <li><span class="opt-letter">C</span><span class="opt-body">Feel grounded and enduring<br><span class="map c-classic">Classic <span class="pts">+1.0</span></span></span></li>
+        <li><span class="opt-letter">D</span><span class="opt-body">Support how you actually live<br><span class="map c-residential">Residential <span class="pts">+1.0</span></span></span></li>
+      </ul>
+    </article>
+
+    <article class="q">
+      <div class="qhead"><span class="qnum">Q10</span><span class="qtext">Good design, to you, is…</span></div>
+      <ul class="opts">
+        <li><span class="opt-letter">A</span><span class="opt-body">Quietly intelligent<br><span class="map c-scandi">Scandinavian <span class="pts">+1.0</span></span></span></li>
+        <li><span class="opt-letter">B</span><span class="opt-body">Confident, full of character<br><span class="map c-midcentury">Mid-Century <span class="pts">+1.0</span></span></span></li>
+        <li><span class="opt-letter">C</span><span class="opt-body">Time-tested<br><span class="map c-classic">Classic <span class="pts">+1.0</span></span></span></li>
+        <li><span class="opt-letter">D</span><span class="opt-body">Effortlessly comfortable<br><span class="map c-residential">Residential <span class="pts">+1.0</span></span></span></li>
+      </ul>
+    </article>
+
+    <article class="q">
+      <div class="qhead"><span class="qnum">Q11</span><span class="qtext">The detail you notice first in someone else's home:</span></div>
+      <ul class="opts">
+        <li><span class="opt-letter">A</span><span class="opt-body">How inviting the seating is<br><span class="map c-sofa">Sofa <span class="pts">+1.0</span></span></span></li>
+        <li><span class="opt-letter">B</span><span class="opt-body">That one perfect chair<br><span class="map c-lounge">Lounge Chair <span class="pts">+1.0</span></span></span></li>
+        <li><span class="opt-letter">C</span><span class="opt-body">The table and how it's set<br><span class="map c-table">Table <span class="pts">+1.0</span></span></span></li>
+        <li><span class="opt-letter">D</span><span class="opt-body">What's on the walls and shelves<br><span class="map c-artwork">Artwork <span class="pts">+1.0</span></span></span></li>
+      </ul>
+    </article>
+
+    <article class="q">
+      <div class="qhead"><span class="qnum">Q12</span><span class="qtext">Your home should feel…</span></div>
+      <ul class="opts">
+        <li><span class="opt-letter">A</span><span class="opt-body">Light and serene<br><span class="map c-scandi">Scandinavian <span class="pts">+1.0</span></span></span></li>
+        <li><span class="opt-letter">B</span><span class="opt-body">Flexible and evolving<br><span class="map c-midcentury">Mid-Century <span class="pts">+1.0</span></span></span></li>
+        <li><span class="opt-letter">C</span><span class="opt-body">Grounded and settled<br><span class="map c-classic">Classic <span class="pts">+1.0</span></span></span></li>
+        <li><span class="opt-letter">D</span><span class="opt-body">Easy and unfussy<br><span class="map c-residential">Residential <span class="pts">+1.0</span></span></span></li>
+      </ul>
+    </article>
+
+    <!-- Block 4 -->
+    <div class="block-banner">
+      <h3>Questions 13–16 <span class="pill">Blend clarity &middot; &times;0.75</span></h3>
+    </div>
+
+    <article class="q">
+      <div class="qhead"><span class="qnum">Q13</span><span class="qtext">A lazy Sunday at home is…</span></div>
+      <ul class="opts">
+        <li><span class="opt-letter">A</span><span class="opt-body">Curled on the sofa all day<br><span class="map c-sofa">Sofa <span class="pts">+0.75</span></span></span></li>
+        <li><span class="opt-letter">B</span><span class="opt-body">Reading in your favourite chair<br><span class="map c-lounge">Lounge Chair <span class="pts">+0.75</span></span></span></li>
+        <li><span class="opt-letter">C</span><span class="opt-body">A long, slow lunch at the table<br><span class="map c-table">Table <span class="pts">+0.75</span></span></span></li>
+        <li><span class="opt-letter">D</span><span class="opt-body">Pottering and rearranging<br><span class="map c-artwork">Artwork <span class="pts">+0.75</span></span></span></li>
+      </ul>
+    </article>
+
+    <article class="q flavour-q">
+      <div class="qhead"><span class="qnum">Q14</span><span class="qtext">If your home had a soundtrack:</span></div>
+      <ul class="opts single">
+        <li><span class="opt-letter">A–D</span><span class="opt-body">Ambient and spacious / Loud and joyful / Soft acoustic warmth / Vinyl crackle<br><span class="map c-flavour">Flavour — no score</span></span></li>
+      </ul>
+    </article>
+
+    <article class="q">
+      <div class="qhead"><span class="qnum">Q15</span><span class="qtext">You're naturally the kind of person who…</span></div>
+      <ul class="opts">
+        <li><span class="opt-letter">A</span><span class="opt-body">Likes things calm and in order<br><span class="map c-scandi">Scandinavian <span class="pts">+0.75</span></span></span></li>
+        <li><span class="opt-letter">B</span><span class="opt-body">Loves bold personality<br><span class="map c-midcentury">Mid-Century <span class="pts">+0.75</span></span></span></li>
+        <li><span class="opt-letter">C</span><span class="opt-body">Values quality over trends<br><span class="map c-classic">Classic <span class="pts">+0.75</span></span></span></li>
+        <li><span class="opt-letter">D</span><span class="opt-body">Puts comfort first<br><span class="map c-residential">Residential <span class="pts">+0.75</span></span></span></li>
+      </ul>
+    </article>
+
+    <article class="q">
+      <div class="qhead"><span class="qnum">Q16</span><span class="qtext">You'd rather live with…</span></div>
+      <ul class="opts">
+        <li><span class="opt-letter">A</span><span class="opt-body">A few perfect, pared-back pieces<br><span class="map c-scandi">Scandinavian <span class="pts">+0.75</span></span></span></li>
+        <li><span class="opt-letter">B</span><span class="opt-body">A collection of characterful finds<br><span class="map c-midcentury">Mid-Century <span class="pts">+0.75</span></span></span></li>
+        <li><span class="opt-letter">C</span><span class="opt-body">One beautifully made heirloom<br><span class="map c-classic">Classic <span class="pts">+0.75</span></span></span></li>
+        <li><span class="opt-letter">D</span><span class="opt-body">Whatever's most comfortable<br><span class="map c-residential">Residential <span class="pts">+0.75</span></span></span></li>
+      </ul>
+    </article>
+
+    <div class="callout">
+      <strong>Worked example.</strong> Someone answers mostly B on Style questions (Mid-Century) and mostly D on
+      Expression questions (Artwork). Style total: Mid-Century leads &rarr; <em>Mid-Century</em>.
+      Expression total: Artwork leads &rarr; <em>Artwork</em>. Result: <strong>Mid-Century – Artwork</strong>.
+      Their Q14 answer changed nothing.
+    </div>
+  </section>
+
+  <footer>
+    Find Your FFit &middot; quiz reference &middot; v2.2 (4-option, personality-led) &middot; built on the V2.1 4&times;4 scoring model
+  </footer>
+
+</div>
+</body>
+</html>
