@@ -92,14 +92,14 @@ window.PF_MOBILE = function () { return innerWidth <= 767 && !window.PF_MOBILE_F
  * Tunables: R=0.78 (reading line; higher = inks lower/sooner),
  *           K=0.08 (easing; lower = slower/gentler), feather=22.
  */
-(function(){var IC=document.querySelector('.pf-intro, .pf-about-intro, .pf-contact');if(!IC)return;var G='#d4d4d4',B='#1A1A1A';var T=[].slice.call(IC.querySelectorAll('.pf-display,.pf-lead,.pf-stmt-lead,.pf-stmt-p,.pf-stmt-fade,.pf-contact-h,.pf-contact-body,.pf-contact-phone,.pf-contact-email'));if(!T.length)return;var c0=IC.querySelector('.pf-cta');if(c0){c0.style.color=B;c0.style.webkitTextFillColor=B;}var S=[];function ST(s){var y=s.style;y.color='transparent';y.webkitTextFillColor='transparent';y.backgroundClip='text';y.webkitBackgroundClip='text';}function P(e){var ns=[].slice.call(e.childNodes);ns.forEach(function(n){if(n.nodeType===3){var a=n.nodeValue.split(/(\s+)/),fr=document.createDocumentFragment();a.forEach(function(p){if(!p)return;if(/^\s+$/.test(p)){fr.appendChild(document.createTextNode(p));return;}var s=document.createElement('span');s.textContent=p;ST(s);fr.appendChild(s);S.push(s);});e.replaceChild(fr,n);}else if(n.nodeName!=='BR'){P(n);}});}T.forEach(P);var L=1;function M(){S.forEach(function(s){var r=s.getBoundingClientRect();s.t=Math.round(r.top);s.l=r.left;s.w=r.width||1;});var o=[];S.forEach(function(s){if(o.indexOf(s.t)<0)o.push(s.t);});o.sort(function(a,b){return a-b;});L=o.length;var g={};S.forEach(function(s){var i=o.indexOf(s.t);s.i=i;var x=g[i]||(g[i]={a:1e9,b:-1e9});if(s.l<x.a)x.a=s.l;if(s.l+s.w>x.b)x.b=s.l+s.w;});S.forEach(function(s){var x=g[s.i];s.q=s.l-x.a;s.lw=(x.b-x.a)||1;});}function BB(){var tp=1e9,bt=-1e9;for(var i=0;i<T.length;i++){var r=T[i].getBoundingClientRect();if(r.top<tp)tp=r.top;if(r.bottom>bt)bt=r.bottom;}return[tp,bt];}var fit=false;function CF(){fit=BB()[1]<=innerHeight;}M();CF();if(document.fonts)document.fonts.ready.then(function(){M();CF();});addEventListener('resize',function(){M();CF();});var t=0,m=0,R=0.78,K=0.08;function F(){var v=innerHeight,bb=BB(),top=bb[0],h=(bb[1]-bb[0])||1,sp=fit?1:(R*v-top)/h;if(sp<0)sp=0;if(sp>1)sp=1;t+=(sp-t)*K;m=Math.max(m,t);if(m>0.997)m=1;for(var i=0;i<S.length;i++){var s=S[i],f=(m-s.i/L)*L;if(f<0)f=0;else if(f>1)f=1;var rx=f*(s.lw+60)-30,b=(rx-s.q)/s.w*100,e=22/s.w*100;if(e>60)e=60;s.style.backgroundImage='linear-gradient(90deg,'+B+' 0%,'+B+' '+(b-e)+'%,'+G+' '+(b+e)+'%,'+G+' 100%)';}if(m<1)requestAnimationFrame(F);}requestAnimationFrame(F);})();
+(function(){var IC=document.querySelector('.pf-intro, .pf-about-intro, .pf-contact');if(!IC)return;var G='#d4d4d4',B='#1A1A1A';var T=[].slice.call(IC.querySelectorAll('.pf-display,.pf-lead,.pf-stmt-lead,.pf-stmt-p,.pf-stmt-fade,.pf-contact-h,.pf-contact-body,.pf-contact-phone,.pf-contact-email'));if(!T.length)return;var c0=IC.querySelector('.pf-cta');if(c0){c0.style.color=B;c0.style.webkitTextFillColor=B;}var S=[];function ST(s){var y=s.style;y.color='transparent';y.webkitTextFillColor='transparent';y.backgroundClip='text';y.webkitBackgroundClip='text';}function P(e){var ns=[].slice.call(e.childNodes);ns.forEach(function(n){if(n.nodeType===3){var a=n.nodeValue.split(/(\s+)/),fr=document.createDocumentFragment();a.forEach(function(p){if(!p)return;if(/^\s+$/.test(p)){fr.appendChild(document.createTextNode(p));return;}var s=document.createElement('span');s.textContent=p;ST(s);fr.appendChild(s);S.push(s);});e.replaceChild(fr,n);}else if(n.nodeName!=='BR'){P(n);}});}T.forEach(P);var L=1;function M(){S.forEach(function(s){var r=s.getBoundingClientRect();s.t=Math.round(r.top);s.l=r.left;s.w=r.width||1;});var o=[];S.forEach(function(s){if(o.indexOf(s.t)<0)o.push(s.t);});o.sort(function(a,b){return a-b;});L=o.length;var g={};S.forEach(function(s){var i=o.indexOf(s.t);s.i=i;var x=g[i]||(g[i]={a:1e9,b:-1e9});if(s.l<x.a)x.a=s.l;if(s.l+s.w>x.b)x.b=s.l+s.w;});S.forEach(function(s){var x=g[s.i];s.q=s.l-x.a;s.lw=(x.b-x.a)||1;});}function BB(){var tp=1e9,bt=-1e9;for(var i=0;i<T.length;i++){var r=T[i].getBoundingClientRect();if(r.top<tp)tp=r.top;if(r.bottom>bt)bt=r.bottom;}return[tp,bt];}var fit=false;function CF(){fit=BB()[1]<=innerHeight;}M();CF();if(document.fonts)document.fonts.ready.then(function(){M();CF();});addEventListener('resize',function(){M();CF();});var t=0,m=0,R=0.78,K=0.12;function F(){var v=innerHeight,bb=BB(),top=bb[0],h=(bb[1]-bb[0])||1,sp=fit?1:(R*v-top)/h;if(sp<0)sp=0;if(sp>1)sp=1;t+=(sp-t)*K;m=Math.max(m,t);if(m>0.997)m=1;for(var i=0;i<S.length;i++){var s=S[i],f=(m-s.i/L)*L;if(f<0)f=0;else if(f>1)f=1;var rx=f*(s.lw+60)-30,b=(rx-s.q)/s.w*100,e=22/s.w*100;if(e>60)e=60;s.style.backgroundImage='linear-gradient(0deg,'+B+' 0%,'+B+' '+(b-e)+'%,'+G+' '+(b+e)+'%,'+G+' 100%)';}if(m<1)requestAnimationFrame(F);}requestAnimationFrame(F);})();
 
 /* ===== 05-citymarquee.js ===== */
 /*
  * citymarquee — Contact page. Turns the .pf-locations city list into a
  * seamless endless left-scrolling marquee (ALL CAPS). Tunable: SPD=55 px/s.
  */
-(function(){var el=document.querySelector('.pf-locations');if(!el)return;var base=el.textContent.replace(/\s+/g,' ').replace(/[\s—-]+$/,'').trim()+' — ';el.style.overflow='hidden';el.style.whiteSpace='nowrap';el.style.textTransform='uppercase';var track=document.createElement('div');track.style.cssText='display:inline-block;white-space:nowrap;will-change:transform;';el.textContent='';el.appendChild(track);var bw=0;function build(){track.innerHTML='<span>'+base+'</span>';bw=track.firstChild.getBoundingClientRect().width;var vw=el.getBoundingClientRect().width||innerWidth;var c=Math.ceil(vw/bw)+2,h='';for(var i=0;i<c;i++)h+='<span>'+base+'</span>';track.innerHTML=h;}build();addEventListener('resize',build);var x=0,last=performance.now(),SPD=55;function tick(now){var dt=(now-last)/1000;last=now;if(dt>0.1)dt=0.016;x-=SPD*dt;if(x<=-bw)x+=bw;track.style.transform='translateX('+x+'px)';requestAnimationFrame(tick);}requestAnimationFrame(tick);})();
+(function(){var el=document.querySelector('.pf-locations');if(!el)return;var base=el.textContent.replace(/\s+/g,' ').replace(/[\s—-]+$/,'').trim()+' — ';el.style.overflow='hidden';el.style.whiteSpace='nowrap';el.style.textTransform='uppercase';var track=document.createElement('div');track.style.cssText='display:inline-block;white-space:nowrap;will-change:transform;';el.textContent='';el.appendChild(track);var bw=0;function build(){track.innerHTML='<span>'+base+'</span>';bw=track.firstChild.getBoundingClientRect().width;var vw=el.getBoundingClientRect().width||innerWidth;var c=Math.ceil(vw/bw)+2,h='';for(var i=0;i<c;i++)h+='<span>'+base+'</span>';track.innerHTML=h;}build();addEventListener('resize',build);var x=0,last=performance.now(),SPD=35;function tick(now){var dt=(now-last)/1000;last=now;if(dt>0.1)dt=0.016;x-=SPD*dt;if(x<=-bw)x+=bw;track.style.transform='translateX('+x+'px)';requestAnimationFrame(tick);}requestAnimationFrame(tick);})();
 
 /* ===== 06-portfolioscrollanim2.js ===== */
 /*
@@ -419,6 +419,70 @@ window.__PHI = function () {
   var s = document.createElement('style');
   s.textContent = '.pf-nav{position:fixed !important;top:0;left:0;width:100%;z-index:1000 !important}';
   (document.head || document.documentElement).appendChild(s);
+})();
+
+
+/* ===== 16-whychooseus-accordion.js ===== */
+/*
+ * whychooseus-accordion — About page. Click heading to expand/collapse
+ * individual Why Choose Us items. Gate to About page only.
+ * Tunables: ANIMATE_MS = 350 (duration of open/close animation)
+ */
+(function() {
+  if (!/^\/about(\/|$)/.test(location.pathname)) return;
+
+  var items = [].slice.call(document.querySelectorAll('.pf-list-item'));
+  if (!items.length) return;
+
+  var ANIMATE_MS = 350;
+  var openIdx = -1; // Track which item is open (-1 = none)
+
+  items.forEach(function(item, idx) {
+    var title = item.querySelector('.pf-list-title');
+    var sub = item.querySelector('.pf-list-sub');
+
+    if (!title || !sub) return;
+
+    // Set initial state (closed)
+    sub.style.overflow = 'hidden';
+    sub.style.height = '0';
+    sub.style.opacity = '0';
+    sub.style.transition = 'height ' + ANIMATE_MS + 'ms ease, opacity ' + ANIMATE_MS + 'ms ease';
+
+    // Click handler
+    title.style.cursor = 'pointer';
+    title.addEventListener('click', function(e) {
+      e.preventDefault();
+
+      // Close any open item
+      if (openIdx !== -1 && openIdx !== idx) {
+        var prevSub = items[openIdx].querySelector('.pf-list-sub');
+        if (prevSub) {
+          prevSub.style.height = '0';
+          prevSub.style.opacity = '0';
+        }
+      }
+
+      // Toggle current item
+      if (openIdx === idx) {
+        // Close
+        sub.style.height = '0';
+        sub.style.opacity = '0';
+        openIdx = -1;
+      } else {
+        // Measure and open
+        sub.style.transition = 'none'; // Disable transition to measure
+        sub.style.height = 'auto';
+        var measuredH = sub.offsetHeight;
+        sub.style.transition = 'height ' + ANIMATE_MS + 'ms ease, opacity ' + ANIMATE_MS + 'ms ease';
+        sub.style.height = '0'; // Reset to 0
+        sub.offsetHeight; // Force reflow
+        sub.style.height = measuredH + 'px';
+        sub.style.opacity = '1';
+        openIdx = idx;
+      }
+    });
+  });
 })();
 
 
