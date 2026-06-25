@@ -574,6 +574,19 @@ window.__PHI = function () {
 })();
 
 
+/* ===== 17-portfoliostagger.js ===== */
+(function () {
+  if (!location.pathname.includes('/portfolio')) return;
+
+  var s = document.createElement('style');
+  s.textContent = [
+    '.pf-cms-grid .pf-ctile:nth-child(even){transform:translateY(80px);margin-top:0}',
+    '.pf-logo-img{object-fit:contain!important;object-position:center center}'
+  ].join('');
+  (document.head || document.documentElement).appendChild(s);
+})();
+
+
 /* ===== 18-footerlegal.js ===== */
 /*
  * footerlegal — site-wide. Stacks the footer legal links onto separate lines
